@@ -1,6 +1,7 @@
 // Sea Level Detective: page logic. Statistics live in stats.js (tested against the Python pipeline).
 import { fitWindow, yearsToDetect } from "./stats.js";
 import { renderWorld } from "./globe.js";
+import { COAST, speakCoast, coastSwitch } from "./coast.js";
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -249,28 +250,30 @@ function renderNTR() {
     text: `strong El Niño average ${mean(strongW).toFixed(0)}`, font: { color: s2, size: 12 } });
   Plotly.react("ntrchart", [mk(s => !isStrong(s), "Other winters", gray), mk(isStrong, "Strong El Niño winters", s2)],
     layout, { displayModeBar: false, responsive: true });
-  $("ntr-caption").textContent = `Oct–Apr seasons at the Battery (NOAA 8518750); 1997/98 has too little data. One step = a typical year-to-year swing.`;
-  const m = NTR.models, conc = m["all concurrent (best lag 0-6)"], lead = m["all leading (lag 1-6, forecast)"], wind = m["wind (best lag)"];
+  $("ntr-caption").textContent = COAST.id === "west" ? `Oct–Apr seasons at Los Angeles (NOAA 9410660). One step = a typical year-to-year swing.`
+    : `Oct–Apr seasons at the Battery (NOAA 8518750); 1997/98 has too little data. One step = a typical year-to-year swing.`;
+  const m = NTR.models || {}, conc = m["all concurrent (best lag 0-6)"], lead = m["all leading (lag 1-6, forecast)"], wind = m["wind (best lag)"];
   $("ntr-note").textContent = `How we tested it: the model learned from the winters of 1980–2011 and then predicted 2012–2025, reading El Niño ` +
     `in August, two months before each season starts. Leaving out any one winter keeps the effect between +${pct(all.leave_one_out_rr_range[0])} ` +
     `and +${pct(all.leave_one_out_rr_range[1])}. ` +
     (conc ? `Month by month, the harbor's average water level follows that month's weather: winds over the New York Bight and the North Atlantic ` +
       `pressure pattern explain ${Math.round(conc.skill * 100)}% of it (winds alone ${Math.round(wind.skill * 100)}%), and global clues add ` +
       `nothing a month ahead. ` : "") +
-    `El Niño's mark on New York is how often storms push water in, and it shows up months before winter.`;
+    (COAST.id === "west" ? `On the West Coast El Niño lifts the whole winter's sea level, and the high-water days come with it; it shows up months before winter.`
+      : `El Niño's mark on New York is how often storms push water in, and it shows up months before winter.`);
 }
 
 async function main() {
   DATA = await (await fetch("data/series.json")).json();
-  try { NTR = await (await fetch("data/ntr.json")).json(); } catch { NTR = null; }
+  try { NTR = await (await fetch(`data/ntr${COAST.suffix}.json`)).json(); } catch { NTR = null; }
   let GLOBE = null;
-  try { GLOBE = await (await fetch("data/globe.json")).json(); } catch { GLOBE = null; }
+  try { GLOBE = await (await fetch(`data/globe${COAST.suffix}.json`)).json(); } catch { GLOBE = null; }
   // every signal x read-month x winter, leave-one-winter-out (ntr/explore_signal_winters.py), for "Test a winter"
-  if (GLOBE) try { GLOBE.sw = await (await fetch("data/signal_winters.json")).json(); } catch { GLOBE.sw = null; }
+  if (GLOBE) try { GLOBE.sw = await (await fetch(`data/signal_winters${COAST.suffix}.json`)).json(); } catch { GLOBE.sw = null; }
   // the altimetry clue map (ntr/explore_ssh_gibs.py): sea-surface height instead of temperature, switchable on the globe
-  if (GLOBE) try { GLOBE.ssh = await (await fetch("data/clue_map_ssh.json")).json(); } catch { GLOBE.ssh = null; }
+  if (GLOBE) try { GLOBE.ssh = await (await fetch(`data/clue_map_ssh${COAST.suffix}.json`)).json(); } catch { GLOBE.ssh = null; }
   // East Coast tide gauges for the globe's local view: monthly sea level against normal (handoff/csv, NOAA CO-OPS)
-  if (GLOBE) try { GLOBE.local = await (await fetch("data/local_gauges.json")).json(); } catch { GLOBE.local = null; }
+  if (GLOBE) try { GLOBE.local = await (await fetch(`data/local_gauges${COAST.suffix}.json`)).json(); } catch { GLOBE.local = null; }
   await waitForPlotly();
   const order = ["global", "west_pacific", "east_pacific", "california_shelf", "ny_bight", "global_nasa_gmsl_indicator",
                  "gauge_la_jolla", "gauge_san_francisco", "gauge_the_battery"];
@@ -280,6 +283,7 @@ async function main() {
   for (const k of idxKeys) $("index-choice").add(new Option(DATA.indices[k].label, k));
   $("index-choice-wrap").hidden = idxKeys.length < 2;
   if (idxKeys.includes("nasa_enso")) $("index-choice").value = "nasa_enso";
+  if (COAST.explorerRegion && keys.includes(COAST.explorerRegion)) $("region").value = COAST.explorerRegion;
   fillYears();
   $("region").addEventListener("change", () => { fillYears(true); update(); });
   for (const id of ["start", "end", "enso", "index-choice"]) $(id).addEventListener("change", update);
@@ -312,6 +316,9 @@ async function main() {
   $("anim-master").addEventListener("click", () => Anim.toggle());
   Anim.sync();
   renderWorld(GLOBE, css, layoutBase);
+  // East / West: the globe and every panel after it follow the chosen coast
+  speakCoast([$("world"), document.querySelector(".board > .panel"), $("harbor"), $("pacific-lede")]);
+  coastSwitch($("coast-switch"), [$("world"), document.querySelector(".board")]);
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { update(); renderE1(); renderNTR(); });
 }
 main().catch(err => { console.error(err); $("chart").textContent = "Could not load data: " + err.message; });
