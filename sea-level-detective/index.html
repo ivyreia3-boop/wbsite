@@ -41,6 +41,14 @@
           <div class="hud-bl" id="hud-cursor">move the pen over the Earth</div>
         </div>
 
+        <!-- what the globe is showing right now, and the temperature / altimetry switch -->
+        <div class="globe-key" id="globe-key" aria-live="polite">
+          <div class="gk-switch" id="gk-switch" role="group" aria-label="Show sea height or temperature">
+            <span>Show</span><button type="button" data-src="ssh">Sea height · altimetry</button><button type="button" data-src="sst">Temperature</button>
+          </div>
+          <div class="gk-text" id="gk-text"></div>
+        </div>
+
         <!-- the three ways in: a rail of folio marks; each opens its own sidebar -->
         <nav class="rail" aria-label="Ways to explore the globe">
           <button type="button" class="rail-btn" id="tab-signal" aria-pressed="true"><span class="rail-num">I</span><span class="rail-txt">Find the clue</span></button>
@@ -56,7 +64,7 @@
         <button id="globe-best" type="button" class="primary">★ Show me the best clue</button>
         <button id="globe-next" type="button">Next clue ›</button>
         <button id="globe-play" type="button" aria-pressed="false">▶ Play the months</button>
-        <label class="globe-month">Temperature in
+        <label class="globe-month">Read in
           <input type="range" id="globe-month" min="1" max="12" step="1" value="6" aria-describedby="globe-month-label">
         </label>
         <strong id="globe-month-label"></strong>
@@ -66,8 +74,8 @@
         </div>
         <div class="nasa-legend" id="pic-legend" hidden></div>
         <div class="globe-legend" id="legend-signal">
-          <span><i class="chip" style="background:#8e2414"></i>warmer here → more storm-surge days in New York</span>
-          <span><i class="chip" style="background:#1e3550"></i>cooler here → more storm-surge days</span>
+          <span><i class="chip" style="background:#8e2414"></i><span id="lg-hi">warmer here → more storm-surge days in New York</span></span>
+          <span><i class="chip" style="background:#1e3550"></i><span id="lg-lo">cooler here → more storm-surge days</span></span>
           <span><i class="chip line" style="background:#a8321f"></i>proven clue, months ahead</span>
           <span><i class="chip line" style="background:#3b2614"></i>clue for the same month</span>
           <span><i class="chip line" style="background:#8a7a63"></i>tested, no clue</span>

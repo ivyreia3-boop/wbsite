@@ -236,6 +236,20 @@ h3 { font-weight: 400; font-style: italic; font-size: 1.2rem; color: var(--sangu
   border-bottom: 1px solid rgba(110,80,40,0.25); }
 .stage-head b { background: none; font-weight: 400; font-size: 1.35rem; color: var(--ink); }
 .stage-head #hud-mode { font-style: italic; font-size: .95rem; color: var(--sanguine); }
+/* "You are looking at": a key on the globe that says what every layer is, plus the temperature / altimetry switch */
+.globe-key { position: absolute; z-index: 6; bottom: 12px; left: calc(50% + var(--gx, 0px)); transform: translateX(-50%); width: min(400px, 34%);
+  background: rgba(250,244,228,0.94); border: 1px solid rgba(110,80,40,0.4); border-radius: 3px; box-shadow: 1px 2px 8px rgba(80,50,20,0.18);
+  padding: 6px 10px 7px; font-size: .84rem; line-height: 1.35; color: var(--ink); transition: left .55s cubic-bezier(.3,.7,.2,1); }
+.gk-switch { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-style: italic; color: var(--ink-soft); }
+.gk-switch button { font: inherit; font-style: italic; font-size: .86rem; padding: 2px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(110,80,40,0.45); background: transparent; color: var(--ink-soft); }
+.gk-switch button[aria-pressed="true"] { background: var(--sanguine); border-color: var(--sanguine); color: #fbf3e2; }
+.gk-switch button:disabled { opacity: .4; cursor: default; }
+.gk-text b { background: none; font-weight: 400; color: var(--sanguine); }
+.gk-text .sw { display: inline-block; width: 10px; height: 10px; margin: 0 3px 0 6px; vertical-align: -1px; border-radius: 2px; }
+.gk-text .sw.r { background: #a8321f; } .gk-text .sw.b { background: #1e3550; }
+.hud-bl { display: none; }
+@media (max-width: 820px) { .globe-key { position: static; transform: none; width: auto; margin: 6px 8px; } }
 .rail { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; z-index: 6; }
 .rail-btn { display: flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--ink); text-align: left; }
 .rail-num { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(250,244,228,0.96);

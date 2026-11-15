@@ -466,13 +466,19 @@ export function renderWorld(G, css, layoutBase) {
   const battery = { lat: G.battery[0], lng: G.battery[1] };
   const P = Object.fromEntries(G.predictors.map(p => [p.predictor, p]));
   const km = x => Math.round(x).toLocaleString("en-US");
-  const cellMaps = {};   // month -> Map("lat,lon" -> r)
+  // Two clue maps, switchable: "sst" = NASA GISTEMP surface temperature (1980-2025, 43 winters), "ssh" = NASA altimetry
+  // sea-surface height (MEaSUREs via GIBS, 1993-2018, 26 winters). Same cells, same method; CM() is the one in use.
+  const SSHM = G.ssh && G.ssh.maps ? G.ssh : null;
+  const CM = () => (state.src === "ssh" && SSHM ? SSHM : G);
+  const cellMaps = {};   // "src:month" -> Map("lat,lon" -> r)
   const cellR = (m, lat, lng) => {
-    if (!cellMaps[m]) cellMaps[m] = new Map(G.maps[String(m)].map(([la, lo, r]) => [`${la},${lo}`, r]));
+    const key = `${state.src}:${m}`;
+    if (!cellMaps[key]) cellMaps[key] = new Map(CM().maps[String(m)].map(([la, lo, r]) => [`${la},${lo}`, r]));
     const la = 2 * Math.floor(lat / 2) + 1, lo = 2 * Math.floor(lng / 2) + 1;
-    return cellMaps[m].get(`${la},${lo}`);
+    return cellMaps[key].get(`${la},${lo}`);
   };
   const state = { mode: "signal", month: 6, clicks: [], layer: "sst", date: "2026-08-15", winter: 0, token: 0, playing: null,
+    src: SSHM ? "ssh" : "sst",
     sigs: ["nino34_giss", "nao_power", "msl_portland", "seaice_arctic", "pdo_ncei"], readMonths: {} };   // Test a winter: chosen clues; a month picked for a clue (otherwise its best)
   const el = $("globe");
   let world = null;
@@ -518,8 +524,8 @@ export function renderWorld(G, css, layoutBase) {
   let shownBars = [], barsTimer = 0;
   function barsFor(month) {
     const seen = new Set(), out = [];
-    for (const [lat, lng, r] of G.maps[String(month)]) {
-      if (Math.abs(r) < G.r_p05) continue;
+    for (const [lat, lng, r] of CM().maps[String(month)]) {
+      if (Math.abs(r) < CM().r_p05) continue;
       const key = `${lat},${lng}`;
       let o = cellObjs.get(key);
       if (!o) { o = { lat, lng, r }; cellObjs.set(key, o); }
@@ -544,6 +550,7 @@ export function renderWorld(G, css, layoutBase) {
   const sigLabels = () => state.sigs.filter(k => P[k]).map((k, j) => ({ lat: P[k].lat + (P[k].distance_km < 600 ? 3 + 2.5 * j : -6), lng: P[k].lon, text: lab.label(k), size: 0.75, color: INKS[j], swirl: j === 0 }));
   function refresh() {
     if (!world) return;
+    updateKey();
     const m = state.mode;
     const bars = m === "signal" && !state.pic ? barsFor(state.month) : (shownBars = [], []);   // the satellite picture replaces the bars
     const tw = [];   // the winter's numbers are drawn as a 2D bar chart in the note instead of 3D columns on the globe
@@ -572,6 +579,7 @@ export function renderWorld(G, css, layoutBase) {
   function setTexture(canvas) {
     if (!world) return;
     showHolo = !canvas;
+    if (!canvas) { state.shown = null; if (typeof updateKey === "function") updateKey(); }
     const next = canvas || HOLO, mat = world.globeMaterial(), map = mat && mat.map;
     if (!map || !map.image || !shownCanvas || matchMedia("(prefers-reduced-motion: reduce)").matches) {
       cancelAnimationFrame(fadeRaf); fadeOn = false;
@@ -609,6 +617,7 @@ export function renderWorld(G, css, layoutBase) {
     if (!url) { $("nasa-status").textContent = "NASA imagery could not be loaded (offline?). Showing the base map."; setTexture(null); return; }
     setTexture(url);
     $("nasa-status").textContent = `${L.label} · ${d} · NASA GIBS`;
+    state.shown = { layer: layerKey, date: d }; updateKey();
     if (hd) {
       await new Promise(r => setTimeout(r, 600));
       if (token !== state.token) return;
@@ -621,15 +630,15 @@ export function renderWorld(G, css, layoutBase) {
   // Only places with a clue answer: a tap snaps to the nearest clue within ~1,200 km; elsewhere the pen line says so.
   function nearestClue(m, lat, lng, maxKm = 1200) {
     let best = null, bd = maxKm;
-    for (const c of G.maps[String(m)]) {
-      if (Math.abs(c[2]) < G.r_p05) continue;
+    for (const c of CM().maps[String(m)]) {
+      if (Math.abs(c[2]) < CM().r_p05) continue;
       const d = gcKm({ lat, lng }, { lat: c[0], lng: c[1] }); if (d < bd) { bd = d; best = c; }
     }
     return best;
   }
   // a tour of the clearest clues this month: strongest first, at least ~2,500 km apart
   function clueTour(m) {
-    const cells = G.maps[String(m)].filter(c => Math.abs(c[2]) >= G.r_p05).sort((a, b) => Math.abs(b[2]) - Math.abs(a[2]));
+    const cells = CM().maps[String(m)].filter(c => Math.abs(c[2]) >= CM().r_p05).sort((a, b) => Math.abs(b[2]) - Math.abs(a[2]));
     const picked = [];
     for (const c of cells) {
       if (picked.every(p => gcKm({ lat: p[0], lng: p[1] }, { lat: c[0], lng: c[1] }) > 2500)) picked.push(c);
@@ -640,7 +649,7 @@ export function renderWorld(G, css, layoutBase) {
   function ask(lat, lng) {
     const m = state.mode === "nasa" ? Number(state.date.slice(5, 7)) : state.month;
     let r = cellR(m, lat, lng);
-    if (r === undefined || Math.abs(r) < G.r_p05) {
+    if (r === undefined || Math.abs(r) < CM().r_p05) {
       const c = nearestClue(m, lat, lng);
       if (!c) { $("hud-cursor").textContent = "no clue here · tap a coloured bar, or press “Next clue”"; return; }
       [lat, lng, r] = c;
@@ -648,9 +657,9 @@ export function renderWorld(G, css, layoutBase) {
     const d = gcKm({ lat, lng }, battery);
     const inBox = lat >= G.nino34_box[0] && lat <= G.nino34_box[1] && lng >= G.nino34_box[2] && lng <= G.nino34_box[3];
     const hue = r === undefined ? NEON.dim : r > 0 ? NEON.warm1 : NEON.cool1;
-    const strength = r === undefined ? "no link" : Math.abs(r) >= 0.45 ? "strong link" : Math.abs(r) >= G.r_p05 ? "clear link" : "weak link";
+    const strength = r === undefined ? "no link" : Math.abs(r) >= 0.45 ? "strong link" : Math.abs(r) >= CM().r_p05 ? "clear link" : "weak link";
     state.clicks.push({ lat, lng, hue, color: [fade(hue, 0.1), hue], stroke: r === undefined ? 0.25 : 0.3 + 2.2 * Math.abs(r), dash: true,
-      glow: r !== undefined && Math.abs(r) >= G.r_p05, short: `${fmtLL(lat, lng)}`,
+      glow: r !== undefined && Math.abs(r) >= CM().r_p05, short: `${fmtLL(lat, lng)}`,
       tip: `<b>${fmtLL(lat, lng)}</b><br>${km(d)} km from New York Harbor<br>${strength}` });
     if (state.clicks.length > 5) state.clicks.shift();
     const lead = m < 10 ? `${10 - m} months before the stormy season` : "during the stormy season";
@@ -666,7 +675,9 @@ export function renderWorld(G, css, layoutBase) {
       </dl>
       <div class="meter"><i style="width:${pct}%;background:${hue}"></i></div>
       <p>${r === undefined ? "Temperature here tracks nothing in New York's winters."
-        : `When it is <strong>${r > 0 ? "warmer" : "cooler"}</strong> than usual here in ${MONTHS[m - 1]}, ${lead}, New York tends to get more storm-surge days.`}</p>
+        : state.src === "ssh"
+          ? `When the sea stands <strong>${r > 0 ? "higher" : "lower"}</strong> than usual here in ${MONTHS[m - 1]} (NASA altimetry), ${lead}, New York tends to get more storm-surge days.`
+          : `When it is <strong>${r > 0 ? "warmer" : "cooler"}</strong> than usual here in ${MONTHS[m - 1]}, ${lead}, New York tends to get more storm-surge days.`}</p>
       ${inBox ? `<p class="ok">This is the El Niño region, the clue that held up when tested on recent winters.</p>`
         : `<p class="warn">The El Niño region (dashed outline) is the clue that held up on recent winters.</p>`}
       <p class="muted">Thicker line = closer link. <button type="button" class="link-btn" data-next-clue>Next clue ›</button></p>`;
@@ -683,10 +694,10 @@ export function renderWorld(G, css, layoutBase) {
       .pointLat("lat").pointLng("lng").pointResolution(5).pointsMerge(false)
       .pointsTransitionDuration(matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : TWEEN_MS)
       .pointRadius(d => (d.kind === "tower" ? 1.7 : d.hide ? 0 : 0.26))
-      .pointAltitude(d => (d.kind === "tower" ? d.alt : d.hide ? 0 : 0.01 + 0.85 * (Math.abs(d.r) - G.r_p05)))
-      .pointColor(d => (d.kind === "tower" ? d.color : colorFor(d.r, G.r_p05)))
+      .pointAltitude(d => (d.kind === "tower" ? d.alt : d.hide ? 0 : 0.01 + 0.85 * (Math.abs(d.r) - CM().r_p05)))
+      .pointColor(d => (d.kind === "tower" ? d.color : colorFor(d.r, CM().r_p05)))
       .pointLabel(d => (d.kind === "tower" ? `<div class="tip"><b>${d.name}</b><br>${d.days} surge days</div>`
-        : `<div class="tip">${fmtLL(d.lat, d.lng)}<br>${d.r > 0 ? "warmer" : "cooler"} here → more storm-surge days<br>tap to ask this place</div>`))
+        : `<div class="tip">${fmtLL(d.lat, d.lng)}<br>${state.src === "ssh" ? (d.r > 0 ? "sea higher" : "sea lower") : (d.r > 0 ? "warmer" : "cooler")} here → more storm-surge days<br>tap to ask this place</div>`))
       .arcStartLat("lat").arcStartLng("lng").arcEndLat(() => battery.lat).arcEndLng(() => battery.lng)
       .arcColor("color").arcStroke("stroke").arcAltitudeAutoScale(0.35).arcsTransitionDuration(0)
       .arcAltitude(a => a.alt ?? null)
@@ -729,7 +740,7 @@ export function renderWorld(G, css, layoutBase) {
         const out = $("hud-cursor"); if (!out) return;
         if (!c) { out.textContent = "beyond the Earth"; return; }
         const m = state.mode === "nasa" ? Number(state.date.slice(5, 7)) : state.month, rr = cellR(m, c.lat, c.lng);
-        out.textContent = `${fmtLL(c.lat, c.lng)} · ${km(gcKm(c, battery))} km from New York · ${rr === undefined ? "no link" : Math.abs(rr) >= 0.45 ? "strong link" : Math.abs(rr) >= G.r_p05 ? "clear link" : "weak link"}`;
+        out.textContent = `${fmtLL(c.lat, c.lng)} · ${km(gcKm(c, battery))} km from New York · ${rr === undefined ? "no link" : Math.abs(rr) >= 0.45 ? "strong link" : Math.abs(rr) >= CM().r_p05 ? "clear link" : "weak link"}`;
       });
     });
     new ResizeObserver(() => world.width(el.clientWidth).height(el.clientHeight)).observe(el);
@@ -765,14 +776,15 @@ export function renderWorld(G, css, layoutBase) {
   const mSlider = $("globe-month");
   function setMonth(m) {
     state.month = m; mSlider.value = String(m); $("globe-month-label").textContent = monthLabel(m);
-    if (state.pic) showPic({ layer: "sst", date: picDate(m), auto: true }); else refresh();
+    if (state.pic) showPic({ layer: picLayer(), date: picDate(m, picLayer()), auto: true }); else refresh();
   }
   // The NASA satellite picture, folded into "Find the clue": sea temperature in the chosen month of the latest year
   // (it follows the month slider and the Play button), or one of two key moments.
-  const picDate = m => {
-    const end = LAYERS.sst.end, y = Number(end.slice(0, 4)), d = `${y}-${String(m).padStart(2, "0")}-15`;
+  const picDate = (m, layer = "sst") => {   // the chosen month in the latest year the layer covers
+    const end = LAYERS[layer].end, y = Number(end.slice(0, 4)), d = `${y}-${String(m).padStart(2, "0")}-15`;
     return d <= end ? d : `${y - 1}-${String(m).padStart(2, "0")}-15`;
   };
+  const picLayer = () => (state.src === "ssh" ? "ssh" : "sst");   // the picture follows the temperature / altimetry switch
   function showPic(pic) {
     state.pic = pic; state.layer = pic ? pic.layer : state.layer;
     $("globe-pic").setAttribute("aria-pressed", String(!!pic));
@@ -784,7 +796,8 @@ export function renderWorld(G, css, layoutBase) {
     refresh(); showImagery(pic.layer, pic.date, !state.playing);
   }
   const moments = [
-    { text: "This year's El Niño · Aug 2026", layer: "sst", date: "2026-08-15", pov: [5, -135, 2.0] },
+    { text: "This year's El Niño · Aug 2026 (temperature)", layer: "sst", date: "2026-08-15", pov: [5, -135, 2.0] },
+    { text: "Great El Niño · Nov 1997 (sea height)", layer: "ssh", date: "1997-11-15", pov: [5, -135, 2.0] },
     { text: "Blizzard hits New York · Jan 2016", layer: "clouds", date: "2016-01-23", pov: [36, -70, 1.3] },
   ];
   $("pic-moments").innerHTML = moments.map((p, i) => `<button type="button" data-i="${i}" data-date="${p.date}">${p.text}</button>`).join("");
@@ -792,7 +805,7 @@ export function renderWorld(G, css, layoutBase) {
     const b = e.target.closest("button[data-i]"), p = b && moments[b.dataset.i]; if (!p) return;
     stopPlay(); showPic({ layer: p.layer, date: p.date, auto: false }); fly(...p.pov);
   });
-  $("globe-pic").addEventListener("click", () => showPic(state.pic ? null : { layer: "sst", date: picDate(state.month), auto: true }));
+  $("globe-pic").addEventListener("click", () => showPic(state.pic ? null : { layer: picLayer(), date: picDate(state.month, picLayer()), auto: true }));
   mSlider.addEventListener("input", () => setMonth(Number(mSlider.value)));
   $("globe-play").addEventListener("click", () => togglePlay("globe-play", () => setMonth(state.month % 12 + 1), 1400));
 
@@ -906,7 +919,8 @@ export function renderWorld(G, css, layoutBase) {
     if (state.mode === "winter") {
       // the globe shows the ocean in the month the signals were read: what a forecaster could have seen
       const d = `${w.year}-${String(m0).padStart(2, "0")}-15`;
-      const key = d >= LAYERS.sst.start ? "sst" : d >= LAYERS.ssh.start && d <= LAYERS.ssh.end ? "ssh" : null;
+      const sshOK = d >= LAYERS.ssh.start && d <= LAYERS.ssh.end, sstOK = d >= LAYERS.sst.start;
+      const key = state.src === "ssh" ? (sshOK ? "ssh" : sstOK ? "sst" : null) : (sstOK ? "sst" : sshOK ? "ssh" : null);   // follows the switch where both exist
       if (key) { state.layer = key; showImagery(key, d, !(state.playing || state.autoStep)); }   // no sharp re-load while playing: lighter
       else { state.token++; setTexture(null); $("nasa-status").textContent = `NASA satellite pictures begin in late 1992; the globe shows the base map for ${mon} ${w.year}.`; }
       $("winter-note").innerHTML = key ? `Globe: NASA ${key === "sst" ? "sea temperature" : "sea height"} on 15 ${mon} ${w.year}, when ${lab.label(sigs[0] || "nino34_giss")} was read. ` + scaleHtml(LAYERS[key]) : `Satellite pictures begin in late 1992.`;
@@ -927,6 +941,42 @@ export function renderWorld(G, css, layoutBase) {
   const nasaHint = `<div class="hud-h"><span class="blink">§</span> Nota · seen from space</div>
     <p>Pick a moment below. The globe shows what NASA satellites saw that day.</p>
     <p class="muted">Red chalk = warmer or higher than normal; blue ink = cooler or lower. Tap the ocean to ask what it knows about New York's winter.</p>`;
+  // ------------------------------------------------------------------ "You are looking at": the key on the globe
+  // One line that always says what each layer on the globe is, where it comes from, when, and how to read its colours;
+  // the switch beside it chooses temperature or altimetry for both the clue bars and the satellite picture.
+  const SRC_TXT = {
+    ssh: { what: "sea-surface height", from: "NASA altimetry (MEaSUREs)", hi: "sea higher", lo: "sea lower" },
+    sst: { what: "surface temperature", from: "NASA GISTEMP", hi: "warmer", lo: "cooler" },
+  };
+  const fmtDay = d => toDate(d).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  function updateKey() {
+    const k = $("gk-text"); if (!k) return;
+    const s = SRC_TXT[state.src], cm = CM(), parts = [];
+    if (state.mode === "signal" && !state.pic)
+      parts.push(`<b>Bars</b>: places where ${s.what} in <b>${MONTHS[state.month - 1]}</b> goes with New York's storm-surge days the next winter ` +
+        `(${s.from}, ${cm.years[0]}–${cm.years[1]}, ${cm.n_seasons} winters). <i class="sw r"></i>${s.hi} → more surges · <i class="sw b"></i>${s.lo} → more surges · taller = closer link.`);
+    if (state.shown) {
+      const L = state.shown.layer;
+      parts.push(L === "clouds" ? `<b>Picture</b>: what a NASA satellite (VIIRS) saw on <b>${fmtDay(state.shown.date)}</b>, clouds included.`
+        : `<b>Picture</b>: NASA ${L === "ssh" ? "sea-surface height (altimetry, MEaSUREs)" : "sea temperature (GHRSST MUR)"} on <b>${fmtDay(state.shown.date)}</b>, ` +
+          `against normal: <i class="sw r"></i>${L === "ssh" ? "higher" : "warmer"} · <i class="sw b"></i>${L === "ssh" ? "lower" : "cooler"} · ink lines every ${L === "ssh" ? "10 cm" : "1 °C"}.`);
+    }
+    if (!parts.length) parts.push(`<b>Globe</b>: the Earth on parchment; tap a coloured place, or switch the picture on.`);
+    parts.push(`<b>Lines</b> fly to New York Harbor from the clue you picked.`);
+    k.innerHTML = parts.join(" ");
+    if ($("lg-hi")) { $("lg-hi").textContent = `${s.hi} here → more storm-surge days in New York`; $("lg-lo").textContent = `${s.lo} here → more storm-surge days`; }
+    document.querySelectorAll("#gk-switch button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.src === state.src)));
+  }
+  function setSrc(src) {
+    if (src === "ssh" && !SSHM) return;
+    state.src = src;
+    if (state.mode === "signal") { if (state.pic && state.pic.auto) showPic({ layer: picLayer(), date: picDate(state.month, picLayer()), auto: true }); else refresh(); }
+    if (state.mode === "winter") setWinter(state.winter);
+    updateKey();
+  }
+  $("gk-switch").addEventListener("click", e => { const b = e.target.closest("button[data-src]"); if (b) setSrc(b.dataset.src); });
+  if (!SSHM) $("gk-switch").querySelector('[data-src="ssh"]').disabled = true;
+
   const MODES = ["signal", "winter"];   // the public page shows two ways in; the old satellite mode lives on inside "signal"
   function setMode(mode) {
     stopPlay(); state.mode = mode;
@@ -964,9 +1014,10 @@ export function renderWorld(G, css, layoutBase) {
   setMode("signal");
   window.seaLevelGlobe = { world, state, ask, setMode, setMonth, setWinter, setLayer };   // for tests and scripted demos
 
-  $("globe-caption").textContent = `Each bar marks a place whose temperature in the chosen month tracks how many storm-surge days New York's Battery gets the ` +
-    `next winter; taller bar, closer link. Temperatures: NASA GISTEMP; surge days: NOAA tide gauge; ${G.years[0]}–${G.years[1]}, ${G.n_seasons} winters. ` +
-    `The outlined El Niño region is the clue that held up when tested on recent winters. Satellite pictures: NASA GIBS. Drag to spin, tap to ask.`;
+  $("globe-caption").textContent = `Each bar marks a place whose sea height or temperature in the chosen month tracks how many storm-surge days New York's ` +
+    `Battery gets the next winter; taller bar, closer link. Switch on the globe: NASA altimetry (MEaSUREs sea-surface height, ` +
+    `${SSHM ? `${SSHM.years[0]}–${SSHM.years[1]}, ${SSHM.n_seasons} winters` : "not loaded"}) or NASA GISTEMP temperature (${G.years[0]}–${G.years[1]}, ${G.n_seasons} winters). ` +
+    `Surge days: NOAA tide gauge. The outlined El Niño region is the clue that held up when tested on recent winters. Satellite pictures: NASA GIBS. Drag to spin, tap to ask.`;
 
   // ------------------------------------------------------------------ distance charts
   const s1 = css("--series-1"), s2 = css("--series-2");
