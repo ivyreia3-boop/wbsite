@@ -545,25 +545,58 @@ export function renderWorld(G, css, layoutBase) {
   const sigArcs = () => state.sigs.filter(k => P[k] && P[k].distance_km > 60).map((k, j) => ({ p: P[k], hue: INKS[j], stroke: j ? 0.7 : 1.1, dash: true, glow: j === 0,
     lat: P[k].lat, lng: P[k].lon, color: [fade(INKS[j], 0.35), INKS[j]], tip: `<b>${P[k].label}</b><br>${km(P[k].distance_km)} km from New York Harbor` }));
   const sigLabels = () => state.sigs.filter(k => P[k]).map((k, j) => ({ lat: P[k].lat + (P[k].distance_km < 600 ? 3 + 2.5 * j : -6), lng: P[k].lon, text: lab.label(k), size: 0.75, color: INKS[j], swirl: j === 0 }));
+  // ------------------------------------------------------------------ Local view: NOAA tide gauges along the East Coast
+  // Each gauge is a column: its sea level against normal (same calendar month, 1993-2012 = 0), red above, blue below.
+  // Find the clue: the chosen month of the latest year on record. Test a winter: that winter's Oct-Apr average.
+  const LOCAL = G.local || null, gaugeObjs = {};
+  function localPeriod() {
+    if (!LOCAL) return null;
+    const ms = LOCAL.months, bat = LOCAL.gauges[0].anom;
+    if (state.mode === "winter") {
+      const y = WINTERS[state.winter].year, idx = [];
+      for (let k = 0; k < ms.length; k++) { const [yy, mm] = ms[k].split("-").map(Number); if ((yy === y && mm >= 10) || (yy === y + 1 && mm <= 4)) idx.push(k); }
+      return { idx, label: `Oct ${y} – Apr ${y + 1} average`, winterYear: y };
+    }
+    for (let k = ms.length - 1; k >= 0; k--) if (Number(ms[k].slice(5)) === state.month && bat[k] !== null) {
+      const y = Number(ms[k].slice(0, 4));
+      return { idx: [k], label: `${MONTHS[state.month - 1]} ${y}`, winterYear: state.month <= 9 ? y : null, monthYear: y };
+    }
+    return null;
+  }
+  function gauges() {
+    const per = localPeriod(); if (!per) return [];
+    return LOCAL.gauges.map(g => {
+      const v = per.idx.map(k => g.anom[k]).filter(x => x !== null);
+      const a = v.length >= Math.ceil(per.idx.length * 0.6) ? v.reduce((s, x) => s + x, 0) / v.length : null;
+      const o = gaugeObjs[g.id] || (gaugeObjs[g.id] = { kind: "gauge", id: g.id, name: g.name, lat: g.lat, lng: g.lon });
+      return Object.assign(o, { a, alt: a === null ? 0.004 : 0.01 + Math.min(Math.abs(a), 300) / 300 * 0.22,
+        color: a === null ? "#9a8f7e" : a >= 0 ? NEON.warm1 : NEON.cool1, battery: g.id === "battery" });
+    });
+  }
+  const winterDays = y => { const w = WINTERS.find(x => x.year === y); return w ? w.observed : null; };
+
   function refresh() {
     if (!world) return;
     updateKey();
-    const m = state.mode;
-    const bars = m === "signal" && !state.pic ? barsFor(state.month) : (shownBars = [], []);   // the satellite picture replaces the bars
-    const tw = [];   // the winter's numbers are drawn as a 2D bar chart in the note instead of 3D columns on the globe
+    const m = state.mode, local = state.src === "local";
+    // Global · altimetry shows the NASA picture alone; Global · temperature shows the clue bars; Local shows the gauges
+    const bars = m === "signal" && !state.pic && state.src === "sst" ? barsFor(state.month) : (shownBars = [], []);
+    const tw = local ? gauges() : [];
     world.pointsData([...bars, ...tw]);
     // bars that faded out (radius 0) are dropped once the tween has finished
     clearTimeout(barsTimer);
     if (bars.some(o => o.hide)) barsTimer = setTimeout(() => { if (world && state.mode === "signal") world.pointsData(world.pointsData().filter(o => !o.hide)); }, TWEEN_MS + 120);
-    const arcs = m === "signal" ? [...staticArcs, ...state.clicks] : m === "winter" ? sigArcs() : state.clicks;
+    const arcs = local ? [] : m === "signal" ? [...staticArcs, ...state.clicks] : m === "winter" ? sigArcs() : state.clicks;
     world.arcsData(withGlow(arcs));
-    const labels = [m === "winter" ? { ...nyLabel, lat: 45, lng: -80, alt: 0.02 } : nyLabel, ...(m === "signal" ? sourceLabels : m === "winter" ? sigLabels() : []),
-      ...(el.clientWidth < 520 ? [] : tw).map(t => ({ lat: t.lat, lng: t.lng, text: `${t.days % 1 ? t.days.toFixed(1) : t.days}`, size: 1.5, color: t.color, alt: t.alt + 0.06 })),
+    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? -0.4 : 0), lng: t.lng + (t.battery ? 6.5 : 1.1), alt: t.alt + 0.02,
+      text: t.battery ? `The Battery ${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))} mm`
+        : `${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))}`, size: t.battery ? 0.9 : 0.55, color: t.battery ? NEON.cyan : t.color }));
+    const labels = local ? gaugeLabels : [m === "winter" ? { ...nyLabel, lat: 45, lng: -80, alt: 0.02 } : nyLabel, ...(m === "signal" ? sourceLabels : m === "winter" ? sigLabels() : []),
       ...state.clicks.slice(-1).map(c => ({ lat: c.lat, lng: c.lng, text: c.short, size: 0.7, color: NEON.cyan, alt: 0.1 }))];
     world.htmlElementsData(labels);
     const nino = { lat: 0, lng: -145, color: NEON.amber, maxR: 9, speed: 2.2, period: 1800 };
     const sigRings = state.sigs.filter(k => P[k]).map((k, j) => ({ lat: P[k].lat, lng: P[k].lon, color: INKS[j], maxR: j ? 5 : 8, speed: 2, period: 1600 }));
-    world.ringsData([{ ...battery, color: NEON.cyan, maxR: 5, speed: 1.6, period: 1300 }, ...(m === "signal" ? [nino] : m === "winter" ? sigRings : []),
+    world.ringsData([{ ...battery, color: NEON.cyan, maxR: 5, speed: 1.6, period: 1300 }, ...(local ? [] : m === "signal" ? [nino] : m === "winter" ? sigRings : []),
       ...state.clicks.slice(-1).map(c => ({ lat: c.lat, lng: c.lng, color: c.hue, maxR: 4, speed: 2, period: 900 }))]);
   }
 
@@ -644,6 +677,7 @@ export function renderWorld(G, css, layoutBase) {
     return picked;
   }
   function ask(lat, lng) {
+    if (state.src === "local") return;   // the local view shows tide gauges, not clues
     const m = state.mode === "nasa" ? Number(state.date.slice(5, 7)) : state.month;
     let r = cellR(m, lat, lng);
     if (r === undefined || Math.abs(r) < CM().r_p05) {
@@ -690,10 +724,11 @@ export function renderWorld(G, css, layoutBase) {
       .width(el.clientWidth).height(el.clientHeight)
       .pointLat("lat").pointLng("lng").pointResolution(5).pointsMerge(false)
       .pointsTransitionDuration(matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : TWEEN_MS)
-      .pointRadius(d => (d.kind === "tower" ? 1.7 : d.hide ? 0 : 0.26))
-      .pointAltitude(d => (d.kind === "tower" ? d.alt : d.hide ? 0 : 0.01 + 0.85 * (Math.abs(d.r) - CM().r_p05)))
-      .pointColor(d => (d.kind === "tower" ? d.color : colorFor(d.r, CM().r_p05)))
-      .pointLabel(d => (d.kind === "tower" ? `<div class="tip"><b>${d.name}</b><br>${d.days} surge days</div>`
+      .pointRadius(d => (d.kind === "gauge" ? (d.battery ? 0.75 : 0.55) : d.kind === "tower" ? 1.7 : d.hide ? 0 : 0.26))
+      .pointAltitude(d => (d.kind === "gauge" || d.kind === "tower" ? d.alt : d.hide ? 0 : 0.01 + 0.85 * (Math.abs(d.r) - CM().r_p05)))
+      .pointColor(d => (d.kind === "gauge" || d.kind === "tower" ? d.color : colorFor(d.r, CM().r_p05)))
+      .pointLabel(d => (d.kind === "gauge" ? `<div class="tip"><b>${d.name}</b> tide gauge (NOAA)<br>${d.a === null ? "no data" : `${d.a >= 0 ? "+" : "−"}${Math.abs(Math.round(d.a))} mm vs normal`}</div>`
+        : d.kind === "tower" ? `<div class="tip"><b>${d.name}</b><br>${d.days} surge days</div>`
         : `<div class="tip">${fmtLL(d.lat, d.lng)}<br>${state.src === "ssh" ? (d.r > 0 ? "sea higher" : "sea lower") : (d.r > 0 ? "warmer" : "cooler")} here → more storm-surge days<br>tap to ask this place</div>`))
       .arcStartLat("lat").arcStartLng("lng").arcEndLat(() => battery.lat).arcEndLng(() => battery.lng)
       .arcColor("color").arcStroke("stroke").arcAltitudeAutoScale(0.35).arcsTransitionDuration(0)
@@ -702,7 +737,7 @@ export function renderWorld(G, css, layoutBase) {
       .arcDashAnimateTime(a => (a.dash ? 5000 : 0))
       .arcLabel(a => (a.isGlow ? null : `<div class="tip">${a.tip}</div>`))
       .htmlLat("lat").htmlLng("lng").htmlAltitude(d => d.alt ?? 0.16).htmlTransitionDuration(0)
-      .htmlElement(d => { const e = document.createElement("div"); e.className = "globe-label"; e.textContent = d.text;
+      .htmlElement(d => { const e = document.createElement("div"); e.className = "globe-label"; e.textContent = d.text; if (d.text.includes("\n")) { e.style.whiteSpace = "pre"; e.style.textAlign = "left"; }
         if (d.swirl) { const s = document.createElement("span"); s.className = "vortex"; s.innerHTML = VORTEX; e.prepend(s); }
         e.style.color = d.color; e.style.fontSize = `${Math.round(11 + 3 * d.size)}px`; return e; })
       .pathsData([boxPath(G.nino34_box)]).pathPointLat(p => p[0]).pathPointLng(p => p[1]).pathPointAlt(0.012)
@@ -918,9 +953,10 @@ export function renderWorld(G, css, layoutBase) {
       const d = `${w.year}-${String(m0).padStart(2, "0")}-15`;
       const sshOK = d >= LAYERS.ssh.start && d <= LAYERS.ssh.end, sstOK = d >= LAYERS.sst.start;
       const key = state.src === "ssh" ? (sshOK ? "ssh" : sstOK ? "sst" : null) : (sstOK ? "sst" : sshOK ? "ssh" : null);   // follows the switch where both exist
-      if (key) { state.layer = key; showImagery(key, d, !(state.playing || state.autoStep)); }   // no sharp re-load while playing: lighter
+      if (state.src === "local") { state.token++; setTexture(null); }   // local view: bare map under the tide gauges
+      else if (key) { state.layer = key; showImagery(key, d, !(state.playing || state.autoStep)); }   // no sharp re-load while playing: lighter
       else { state.token++; setTexture(null); $("nasa-status").textContent = `NASA satellite pictures begin in late 1992; the globe shows the base map for ${mon} ${w.year}.`; }
-      $("winter-note").innerHTML = key ? `Globe: NASA ${key === "sst" ? "sea temperature" : "sea height"} on 15 ${mon} ${w.year}, when ${lab.label(sigs[0] || "nino34_giss")} was read. ` + scaleHtml(LAYERS[key]) : `Satellite pictures begin in late 1992.`;
+      $("winter-note").innerHTML = state.src === "local" ? `Globe: NOAA tide gauges, average sea level over winter ${w.year}–${String(w.year + 1).slice(2)}.` : key ? `Globe: NASA ${key === "sst" ? "sea temperature" : "sea height"} on 15 ${mon} ${w.year}, when ${lab.label(sigs[0] || "nino34_giss")} was read. ` + scaleHtml(LAYERS[key]) : `Satellite pictures begin in late 1992.`;
     }
   }
   lab.render();
@@ -946,8 +982,37 @@ export function renderWorld(G, css, layoutBase) {
     sst: { what: "surface temperature", from: "NASA GISTEMP", hi: "warmer", lo: "cooler" },
   };
   const fmtDay = d => toDate(d).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  // A small calendar of year Y and the next spring: which month is read (or shown), and the Oct-Apr season it speaks to.
+  function timeStrip(read, readWord, whole) {
+    const cw = 23, x0 = 6, y = 34, M = "JFMAMJJASONDJFMA";
+    let s = `<svg class="gk-time" viewBox="0 0 ${x0 * 2 + cw * 16} 62" role="img" aria-label="${readWord} ${read ? MONTHS[read - 1] : ""}; predicted: October to April">`;
+    s += `<rect x="${x0 + cw * 9}" y="${y - 13}" width="${cw * 7}" height="22" fill="rgba(165,70,47,0.13)" stroke="rgba(165,70,47,0.5)"/>`;
+    s += `<text x="${x0 + cw * 12.5}" y="${y - 17}" text-anchor="middle" class="gk-t-season">${whole ? "shown: Oct–Apr" : "predicted: Oct–Apr"}</text>`;
+    for (let j = 0; j < 16; j++) {
+      const on = read && j === read - 1;
+      if (on) s += `<circle cx="${x0 + cw * (j + 0.5)}" cy="${y - 2}" r="9" fill="#27211b"/>`;
+      s += `<text x="${x0 + cw * (j + 0.5)}" y="${y + 3}" text-anchor="middle" class="${on ? "gk-t-on" : "gk-t-m"}">${M[j]}</text>`;
+    }
+    s += `<text x="${x0}" y="${y + 24}" class="gk-t-y">year Y</text><text x="${x0 + cw * 12}" y="${y + 24}" class="gk-t-y">Y+1</text>`;
+    if (read && read < 10) {
+      const a = x0 + cw * (read - 0.5), b = x0 + cw * 9;
+      s += `<path d="M${a} ${y - 12} Q ${(a + b) / 2} ${y - 34} ${b - 2} ${y - 12}" fill="none" stroke="#27211b" stroke-width="1.3" stroke-dasharray="3 3"/>` +
+        `<path d="M${b - 7} ${y - 16} L${b - 1} ${y - 11} L${b - 8} ${y - 9} z" fill="#27211b"/>` +
+        `<text x="${(a + b) / 2}" y="${y - 25}" text-anchor="middle" class="gk-t-ahead">${readWord} ${MONTHS[read - 1].slice(0, 3)} · ${10 - read} mo ahead</text>`;
+    }
+    return s + `</svg>`;
+  }
   function updateKey() {
     const k = $("gk-text"); if (!k) return;
+    if (state.src === "local") {
+      const per = localPeriod();
+      k.innerHTML = (per ? `<b>Tide gauges</b> (NOAA), ${per.label}: sea level against normal (same months, 1993–2012). ` : `<b>Tide gauges</b>: no data. `) +
+        `<i class="sw r"></i>higher <i class="sw b"></i>lower; taller = further from normal.` +
+        (per && per.winterYear && winterDays(per.winterYear) !== null ? ` <b>The Battery: ${winterDays(per.winterYear)} storm-surge days</b> that winter.` : "") +
+        (per ? timeStrip(state.mode === "winter" ? null : state.month, "shown", state.mode === "winter") : "");
+      document.querySelectorAll("#gk-switch button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.src === state.src)));
+      return;
+    }
     const s = SRC_TXT[state.src], cm = CM(), parts = [];
     if (state.mode === "signal" && !state.pic)
       parts.push(`<b>Bars</b>: ${s.what} in <b>${MONTHS[state.month - 1]}</b> linked to New York's next winter (${s.from}, ${cm.n_seasons} winters). ` +
@@ -959,15 +1024,27 @@ export function renderWorld(G, css, layoutBase) {
           `<i class="sw r"></i>${L === "ssh" ? "higher" : "warmer"} <i class="sw b"></i>${L === "ssh" ? "lower" : "cooler"} than normal.`);
     }
     if (!parts.length) parts.push(`Tap a coloured place, or show the picture.`);
-    k.innerHTML = parts.join(" ");
+    // the time strip: in Find the clue the month on the slider; in Test a winter the first clue's reading month
+    const readM = state.mode === "winter" ? (state.sigs.length && lab && lab.monthOf ? lab.monthOf(state.sigs[0]) : 6) : state.month;
+    k.innerHTML = parts.join(" ") + timeStrip(readM, "read", false);
     if ($("lg-hi")) { $("lg-hi").textContent = `${s.hi} here → more storm-surge days in New York`; $("lg-lo").textContent = `${s.lo} here → more storm-surge days`; }
     document.querySelectorAll("#gk-switch button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.src === state.src)));
   }
+  // what the globe surface shows for the chosen source in "Find the clue": altimetry = the NASA sea-height picture,
+  // temperature = the clue bars (picture only on request), local = bare map under the tide gauges
+  function applySignalSurface() {
+    if (state.src === "ssh") showPic({ layer: "ssh", date: picDate(state.month, "ssh"), auto: true });
+    else if (state.src === "local") { state.pic = null; state.token++; setTexture(null); refresh(); }
+    else if (state.pic && state.pic.auto && state.pic.layer === "ssh") showPic(null);
+    else refresh();
+  }
   function setSrc(src) {
     if (src === "ssh" && !SSHM) return;
-    state.src = src;
-    if (state.mode === "signal") { if (state.pic && state.pic.auto) showPic({ layer: picLayer(), date: picDate(state.month, picLayer()), auto: true }); else refresh(); }
+    const was = state.src; state.src = src;
+    if (state.mode === "signal") applySignalSurface();
     if (state.mode === "winter") setWinter(state.winter);
+    if (src === "local") fly(36, -72, 0.8);
+    else if (was === "local") state.mode === "winter" ? fly(27, -84, 1.7) : fly(18, -108, 2.2);
     updateKey();
   }
   $("gk-switch").addEventListener("click", e => { const b = e.target.closest("button[data-src]"); if (b) setSrc(b.dataset.src); });
@@ -983,9 +1060,9 @@ export function renderWorld(G, css, layoutBase) {
     $("drawer-title").textContent = { signal: "I · Find the clue", nasa: "See it from space", winter: "II · Test a winter" }[mode];
     $("winter-sheet").hidden = mode !== "winter";
     openDrawer(true);
-    if (mode === "signal") { state.pic = null; showPic(null); $("globe-info").innerHTML = hint; fly(18, -108, 2.2); }
+    if (mode === "signal") { state.pic = null; showPic(null); applySignalSurface(); $("globe-info").innerHTML = hint; state.src === "local" ? fly(36, -72, 0.8) : fly(18, -108, 2.2); }
     if (mode === "nasa") { $("globe-info").innerHTML = nasaHint; refresh(); setLayer(state.layer, state.date); fly(5, -135, 2.0); }
-    if (mode === "winter") { fly(27, -84, 1.7); setWinter(state.winter || Math.max(0, WINTERS.findIndex(w => w.year === 2015))); }
+    if (mode === "winter") { state.src === "local" ? fly(36, -72, 0.8) : fly(27, -84, 1.7); setWinter(state.winter || Math.max(0, WINTERS.findIndex(w => w.year === 2015))); }
   }
   // one stage, pop-up sidebars: the rail picks the mode and opens its sidebar (tap the open one again to fold it away);
   // the note slides in on the right. The globe slides to stay centred in the space the sidebars leave free.
