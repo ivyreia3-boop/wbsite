@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Poseidon SAR — exploring the connections between global ocean variability and coastal sea level for NASA Space Apps 2026." />
+  <title>Sea Level Detective | Poseidon SAR</title>
+  <style>
+    :root {
+      --paper: #f5efdf;
+      --paper-light: #fffaf0;
+      --ink: #29261f;
+      --muted: #756e60;
+      --line: #cbbda5;
+      --rust: #ae644e;
+      --ocean: #375d68;
+      --ocean-dark: #203a42;
+      --shadow: 0 14px 35px rgba(70, 54, 35, .10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image: radial-gradient(rgba(74, 60, 40, .06) .65px, transparent .65px);
+      background-size: 7px 7px;
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    button { font: inherit; }
+    .container { width: min(1140px, calc(100% - 48px)); margin: auto; }
+    .eyebrow { text-transform: uppercase; font-size: .74rem; letter-spacing: .21em; font-weight: 700; color: var(--ocean); }
+    .small { font-size: .88rem; color: var(--muted); }
+    .topline { height: 4px; background: linear-gradient(90deg, var(--ocean-dark), var(--rust), var(--ocean)); }
+    header { background: rgba(250, 246, 237, .95); border-bottom: 1px solid var(--line); }
+    nav { min-height: 78px; display: flex; justify-content: space-between; align-items: center; gap: 25px; }
+    .brand { display: inline-flex; gap: 11px; align-items: center; text-decoration: none; font-weight: 700; font-size: 1.15rem; white-space: nowrap; }
+    .brand-mark { display: grid; place-items: center; width: 37px; height: 37px; border: 1px solid var(--ink); border-radius: 50%; color: var(--rust); font-size: 1.35rem; }
+    .nav-links { display: flex; gap: 25px; flex-wrap: wrap; }
+    .nav-links a { text-decoration: none; font-size: .86rem; color: #484337; }
+    .nav-links a:hover { color: var(--rust); }
+    .hero { overflow: hidden; border-bottom: 1px solid var(--line); }
+    .hero-layout { display: grid; grid-template-columns: 1.07fr .93fr; align-items: center; gap: 20px; min-height: 590px; padding: 65px 0 72px; }
+    .hero h1 { font-size: clamp(4.6rem, 8vw, 7.2rem); font-weight: 500; letter-spacing: -.075em; line-height: .94; margin: 18px 0 22px; }
+    .hero h1 em { display: block; font-weight: 400; color: var(--rust); letter-spacing: -.06em; }
+    .hero-lead { font-size: clamp(1.12rem, 2.2vw, 1.42rem); max-width: 580px; margin: 0 0 13px; }
+    .hero-description { max-width: 555px; color: var(--muted); font-size: .98rem; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 27px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 19px; text-decoration: none; border: 1px solid var(--ink); font-weight: 700; font-size: .9rem; background: transparent; transition: .2s ease; }
+    .button:hover { transform: translateY(-2px); }
+    .button.primary { background: var(--ink); color: var(--paper-light); }
+    .button.secondary { border-color: var(--line); }
+    .globe-panel { position: relative; max-width: 590px; margin-inline: auto; width: 100%; }
+    .globe-panel svg { display: block; width: 100%; height: auto; }
+    .globe-caption { font-style: italic; color: var(--muted); font-size: .78rem; text-align: center; margin-top: -8px; }
+    .chapter { padding: 78px 0; border-bottom: 1px solid var(--line); }
+    .section-heading { display: flex; justify-content: space-between; gap: 15px; align-items: baseline; padding-bottom: 17px; border-bottom: 1px solid var(--line); margin-bottom: 25px; }
+    h2 { font-weight: 500; font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.13; letter-spacing: -.03em; margin: 12px 0 18px; }
+    h3 { font-size: 1.5rem; font-weight: 500; margin: 10px 0; }
+    p { margin: 0 0 13px; }
+    .case-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 38px; align-items: start; }
+    .case-question { font-size: 1.28rem; color: var(--ocean-dark); }
+    .note { padding: 19px 23px; background: #ebe1cd; border-left: 3px solid var(--rust); }
+    .note strong { color: var(--rust); }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card { background: var(--paper-light); padding: 27px 25px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .card .number { color: var(--rust); font-style: italic; font-size: 1rem; }
+    .card p { font-size: .94rem; color: var(--muted); }
+    .tag { display: inline-block; padding: 4px 9px; border: 1px solid var(--line); color: var(--ocean); text-transform: uppercase; font-family: Arial, sans-serif; font-size: .63rem; font-weight: 700; letter-spacing: .1em; }
+    .evidence-shell { display: grid; grid-template-columns: .9fr 1.1fr; gap: 24px; }
+    .evidence-sidebar, .evidence-chart { padding: 26px; background: var(--paper-light); border: 1px solid var(--line); }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 21px 0; }
+    .tab { background: transparent; padding: 9px 13px; border: 1px solid var(--line); color: var(--ink); cursor: pointer; font-weight: 700; font-size: .88rem; }
+    .tab[aria-selected="true"] { background: var(--ocean-dark); color: white; border-color: var(--ocean-dark); }
+    .stat { border-top: 1px solid var(--line); padding: 16px 0; display: flex; justify-content: space-between; align-items: baseline; gap: 15px; }
+    .stat:last-child { padding-bottom: 0; }
+    .stat b { font-size: 1.4rem; font-weight: 500; }
+    .chart-topline { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 16px; }
+    .chart-group { margin-top: 24px; }
+    .chart-label { display: flex; justify-content: space-between; gap: 12px; font-size: .89rem; margin-bottom: 8px; }
+    .track { height: 26px; background: #eae2d3; border: 1px solid #ded2bc; }
+    .fill { width: 0; height: 100%; background: var(--rust); transition: width .4s ease; }
+    .fill.enso { background: var(--ocean); }
+    .legend { display: flex; flex-wrap: wrap; gap: 20px; margin: 18px 0 0; font-size: .82rem; color: var(--muted); }
+    .legend span::before { content: ''; display: inline-block; width: 9px; height: 9px; background: var(--rust); margin-right: 7px; }
+    .legend span:last-child::before { background: var(--ocean); }
+    .result-note { margin-top: 21px; padding: 15px; background: #eee7d8; font-style: italic; }
+    .method-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 17px; }
+    .method-step { border: 1px solid var(--line); padding: 23px; background: rgba(255, 251, 243, .58); }
+    .formula { overflow-wrap: anywhere; font-size: 1.11rem; color: var(--ocean-dark); margin-top: 11px; padding: 13px; background: #e9dfca; }
+    .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; }
+    .placeholder { min-height: 193px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; color: #817866; border: 1px dashed #bba98e; background: repeating-linear-gradient(135deg, #efe6d5, #efe6d5 12px, #f5eddc 12px, #f5eddc 24px); }
+    .placeholder .glyph { font-size: 2rem; color: var(--rust); }
+    .gallery h3 { font-size: 1.25rem; }
+    .fineprint { font-size: .81rem; color: var(--muted); }
+    .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .team-member { border-top: 2px solid var(--ocean); padding: 17px 0; }
+    .team-member h3 { font-size: 1.25rem; }
+    .resources { display: flex; gap: 13px; flex-wrap: wrap; }
+    footer { background: var(--ocean-dark); color: #fff7e9; padding: 30px 0; }
+    footer .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    footer a { color: #fff7e9; }
+    @media (max-width: 860px) {
+      .hero-layout, .case-grid, .evidence-shell { grid-template-columns: 1fr; }
+      .hero-layout { padding: 55px 0 58px; }
+      .globe-panel { max-width: 450px; }
+      .cards, .gallery { grid-template-columns: 1fr 1fr; }
+      .nav-links { gap: 12px; }
+    }
+    @media (max-width: 570px) {
+      .container { width: min(100% - 30px, 1140px); }
+      nav { padding: 17px 0; align-items: flex-start; flex-direction: column; gap: 14px; }
+      .nav-links { gap: 14px; }
+      .hero h1 { font-size: clamp(3.5rem, 13vw, 5rem); }
+      .chapter { padding: 56px 0; }
+      .cards, .gallery, .method-grid, .team-grid { grid-template-columns: 1fr; }
+      .section-heading { display: block; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topline"></div>
+  <header>
+    <nav class="container" aria-label="Primary navigation">
+      <a href="#home" class="brand"><span class="brand-mark" aria-hidden="true">≈</span> POSEIDON SAR</a>
+      <div class="nav-links">
+        <a href="#case">The Case</a>
+        <a href="#clues">Clues</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#methods">Methods</a>
+        <a href="#team">Team</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="container hero-layout">
+        <div>
+          <div class="eyebrow">NASA Space Apps 2026 &nbsp;·&nbsp; An Earth System Investigation</div>
+          <h1>Sea Level <em>Detective</em></h1>
+          <p class="hero-lead">Where on Earth are the clues to our changing coastlines?</p>
+          <p class="hero-description">A scientific investigation by <strong>Team Poseidon SAR</strong> connecting satellite observations, tropical Pacific climate variability and coastal sea-level measurements.</p>
+          <p class="small"><em>Follow the evidence. Separate what the data show from what we are still testing.</em></p>
+          <div class="buttons">
+            <a href="#case" class="button primary">✦ &nbsp;Open the case file</a>
+            <a href="#evidence" class="button secondary">Examine the evidence ↗</a>
+          </div>
+        </div>
+        <div class="globe-panel">
+          <!-- Decorative globe. It is an illustration, NOT a map of scientific measurements. -->
+          <svg viewBox="0 0 570 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Decorative vintage globe with ocean wave motifs">
+            <defs>
+              <clipPath id="globeClip"><circle cx="284" cy="267" r="195"/></clipPath>
+            </defs>
+            <g fill="none" stroke="#9c8e7d" stroke-width="1.2" opacity=".68">
+              <path d="M22 60 Q100 21 184 61 T355 61 T538 60"/>
+              <path d="M18 78 Q99 39 180 79 T356 79 T541 78"/>
+              <path d="M21 97 Q102 58 182 98 T355 98 T541 97"/>
+              <path d="M24 116 Q102 77 182 117 T356 117 T542 116"/>
+            </g>
+            <circle cx="284" cy="267" r="195" fill="#efe5d2" stroke="#76695b" stroke-width="2"/>
+            <g clip-path="url(#globeClip)" fill="none" stroke="#887966" opacity=".72">
+              <ellipse cx="284" cy="267" rx="58" ry="195"/><ellipse cx="284" cy="267" rx="120" ry="195"/>
+              <path d="M89 267H479M104 190H464M104 344H464M142 122H426M142 411H426"/>
+              <path d="M101 233Q284 200 467 233 M101 300Q284 333 467 300" stroke-dasharray="5 7"/>
+              <path d="M161 148c28 0 29-19 53-18 25 1 33 29 51 35 21 7 18 25 4 37-12 11-46 7-60 29-16 24 5 42-4 65-8 21-29 35-33 59-5 32-29 37-36 14M343 153c18-18 49-9 61 4 18 18 44 9 51 35 11 39-18 34-23 57-5 23-26 18-30 44-5 29-36 39-43 6-6-33-32-29-34-52-3-21 30-32 18-58" fill="#b5b1a0" opacity=".47"/>
+            </g>
+            <g fill="none" stroke="#ae644e" stroke-width="2.5" stroke-linecap="round">
+              <path d="M130 284C174 202 234 245 270 280C311 319 350 225 432 251" stroke-dasharray="6 9"/>
+              <circle cx="153" cy="267" r="7" fill="#ae644e"/><circle cx="414" cy="262" r="7" fill="#ae644e"/>
+            </g>
+            <g font-family="Georgia, serif" fill="#375d68" font-size="19" font-style="italic">
+              <text x="49" y="230">Pacific</text><text x="403" y="221">Atlantic</text>
+            </g>
+            <g stroke="#887966" fill="none" stroke-width="1">
+              <path d="M95 470H478M284 466v24"/>
+            </g>
+            <text x="284" y="518" text-anchor="middle" fill="#675a49" font-family="Georgia,serif" font-style="italic" font-size="20">A world of connected waters</text>
+          </svg>
+          <div class="globe-caption">Illustrative globe · not an observational dataset</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="case" class="chapter">
+      <div class="container">
+        <div class="eyebrow">Case File / 01</div>
+        <div class="case-grid">
+          <div>
+            <h2>Where is New York Harbor's winter written?</h2>
+            <p class="case-question">Could patterns in the tropical Pacific help us understand changes thousands of kilometres away on the coast?</p>
+            <p>Our team studies the relationship between <strong>large-scale ocean variability</strong> and <strong>local coastal water levels</strong>. We use satellite-based ocean observations alongside long-term measurements from coastal gauges.</p>
+          </div>
+          <aside class="note">
+            <p><strong>Important distinction</strong></p>
+            <p>The relationship between ENSO and <em>monthly mean sea level</em> has been explored in preliminary analyses. A specific claim about forecasting <em>New York Harbor winter storm-surge days</em> would require separate validation and is not established by that monthly analysis.</p>
+            <p class="small" style="margin-bottom:0">Working research question, not a verified flood forecast.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="clues">
+      <div class="container">
+        <div class="section-heading"><div><div class="eyebrow">The Trail / 02</div><h2>Three strands of evidence</h2></div><span class="small"><em>What we measure · what we model · what we ask</em></span></div>
+        <div class="cards">
+          <article class="card"><span class="number">I · The distant signal</span><h3>El Niño / ENSO</h3><p>A tropical Pacific climate index provides a candidate signal for exploring coastal sea-level variability, including possible time delays.</p><span class="tag">Climate indicator</span></article>
+          <article class="card"><span class="number">II · The ocean in motion</span><h3>NASA Observations</h3><p>Satellite altimetry and ocean-surface wind products can help investigate spatial patterns and large-scale dynamics.</p><span class="tag">Satellite data track</span></article>
+          <article class="card"><span class="number">III · The coastal record</span><h3>Tide-Gauge History</h3><p>Monthly local water-level records can be separated into long-term trend, seasonal oscillations and an ENSO-related component.</p><span class="tag">Statistical model</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="evidence">
+      <div class="container">
+        <div class="section-heading"><div><div class="eyebrow">Evidence Folio / 03</div><h2>What the preliminary analysis found</h2></div><span class="small">2019–2025 held-out months</span></div>
+        <p>Explore the team-provided summary of monthly mean sea-level models. The comparison below uses a trend-plus-Fourier baseline and a model that additionally uses the <em>observed, same-month</em> ENSO index. These are <strong>conditional hindcasts, not advance storm predictions.</strong></p>
+        <div class="evidence-shell">
+          <div class="evidence-sidebar">
+            <div class="eyebrow">Choose a coastal station</div>
+            <div class="tabs" role="tablist" aria-label="Coastal station selection">
+              <button type="button" class="tab" data-city="la" role="tab" aria-selected="true">Los Angeles</button>
+              <button type="button" class="tab" data-city="sd" role="tab" aria-selected="false">San Diego</button>
+              <button type="button" class="tab" data-city="ny" role="tab" aria-selected="false">New York</button>
+            </div>
+            <h3 id="city-title">Los Angeles</h3>
+            <p id="city-description" class="small">The reported monthly model improves considerably with contemporaneous ENSO.</p>
+            <div class="stat"><span>Fitted seasonal range</span><b id="city-season">14.0 cm</b></div>
+            <div class="stat"><span>Same-month ENSO correlation*</span><b id="city-corr">0.72</b></div>
+            <div class="stat"><span>Relative RMSE change</span><b id="city-change">−51%</b></div>
+            <p class="fineprint">*After trend and seasonal removal, where reported. Correlation does not establish causation.</p>
+          </div>
+          <div class="evidence-chart" role="tabpanel" aria-label="Sea level model comparison">
+            <div class="chart-topline"><span class="eyebrow">Model comparison</span><span class="tag">RMSE · millimetres</span></div>
+            <h3>How much does ENSO help?</h3>
+            <p class="small">Lower error is better · trained on 2010–2018 · tested on 2019–2025</p>
+            <div class="chart-group">
+              <div class="chart-label"><span>Trend + 2 Fourier harmonics</span><strong id="baseline-text">83.8 mm</strong></div>
+              <div class="track"><div class="fill" id="baseline-bar" style="width:69.8%"></div></div>
+            </div>
+            <div class="chart-group">
+              <div class="chart-label"><span>Trend + Fourier + ENSO (t)</span><strong id="enso-text">41.4 mm</strong></div>
+              <div class="track"><div class="fill enso" id="enso-bar" style="width:34.5%"></div></div>
+            </div>
+            <div class="legend"><span>Baseline model</span><span>ENSO model</span></div>
+            <div class="result-note" id="city-note">For Los Angeles, the reported held-out error drops by about 51% when same-month ENSO is included.</div>
+          </div>
+        </div>
+        <p class="fineprint" style="margin-top:15px">Preliminary figures reproduced from the team's shared analysis summary; raw files and methods should be checked before final scientific submission. Comparing predictions that use observed ENSO(t) is not the same as forecasting ENSO or future storm surges.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="methods">
+      <div class="container">
+        <div class="section-heading"><div><div class="eyebrow">Investigator's Notebook / 04</div><h2>How the models work</h2></div><span class="small">Two complementary approaches</span></div>
+        <div class="method-grid">
+          <article class="method-step"><span class="number">Method A · Coast</span><h3>Monthly time-series model</h3><p>Separate a slowly changing baseline from seasonal patterns and possible contributions from ENSO, including time-lagged terms.</p><div class="formula">h(t) = a + bt + s(t) + Σ c<sub>k</sub>E(t − kΔt) + ε(t)</div><p class="small" style="margin-top:12px">The seasonal term s(t) is represented by annual and semiannual sine/cosine harmonics; coefficients can be fitted by least squares.</p></article>
+          <article class="method-step"><span class="number">Method B · Open Ocean</span><h3>Spatial ocean dynamics</h3><p>Investigate gridded satellite-derived ocean variables and surface winds to understand basin-scale patterns and possible physical mechanisms.</p><div class="formula">Observations → spatial analysis → model comparison</div><p class="small" style="margin-top:12px">Physics-based modeling and validation belong here as separate work. Do not claim that a PINN or a specific current model has been validated unless confirmed by the team.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="exhibits">
+      <div class="container">
+        <div class="section-heading"><div><div class="eyebrow">Evidence Gallery / 05</div><h2>Exhibits to add</h2></div><span class="small">Replace these cards with real project outputs</span></div>
+        <div class="gallery">
+          <article><div class="placeholder"><div class="glyph">◌</div><strong>INSERT IMAGE</strong><span>NASA sea-surface height / wind map</span></div><h3>Exhibit A · Satellite View</h3><p class="small">Source, date, units and preprocessing description.</p></article>
+          <article><div class="placeholder"><div class="glyph">〰</div><strong>INSERT FIGURE</strong><span>Monthly sea-level series and fitted model</span></div><h3>Exhibit B · Coastal Record</h3><p class="small">Observed vs fitted and held-out test interval.</p></article>
+          <article><div class="placeholder"><div class="glyph">◎</div><strong>INSERT FIGURE</strong><span>ENSO lag / correlation analysis</span></div><h3>Exhibit C · The Delay Question</h3><p class="small">Report both the strongest relationship and the limits of interpretation.</p></article>
+        </div>
+        <!-- EDIT HERE: After uploading an image to your GitHub repository, replace a placeholder div with:
+             <img src="images/your-figure.png" alt="Description of the scientific plot" style="width:100%;height:auto">
+             Then add its actual source and explanatory caption. -->
+      </div>
+    </section>
+
+    <section class="chapter" id="team">
+      <div class="container">
+        <div class="section-heading"><div><div class="eyebrow">The Investigators / 06</div><h2>Team Poseidon SAR</h2></div><span class="small">NASA Space Apps 2026</span></div>
+        <div class="team-grid">
+          <div class="team-member"><h3>Maxim Zyskin</h3><p class="small">Team member · add final role</p></div>
+          <div class="team-member"><h3>Hanyue Shen</h3><p class="small">Team member · add final role</p></div>
+          <div class="team-member"><h3>Ningzi Chen</h3><p class="small">Team member · add final role</p></div>
+        </div>
+        <h3 style="margin-top:28px">Project resources</h3>
+        <div class="resources">
+          <a class="button secondary" href="https://github.com/ivyreia3-boop/wbsite" target="_blank" rel="noopener noreferrer">GitHub repository ↗</a>
+          <a class="button secondary" href="https://www.spaceappschallenge.org/resources/project-submission-guide/" target="_blank" rel="noopener noreferrer">Submission guide ↗</a>
+          <!-- EDIT HERE: Add a link to your final slide deck or video when it is ready. -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="container"><strong>POSEIDON SAR &nbsp;·&nbsp; SEA LEVEL DETECTIVE</strong><span>NASA Space Apps 2026 · Research website · Preliminary findings clearly labelled</span></div></footer>
+
+  <script>
+    // EDIT HERE: Replace these preliminary summary numbers if your team verifies newer results.
+    // RMSE values are in millimetres for held-out data from 2019–2025.
+    const stations = {
+      la: {name:'Los Angeles', season:'14.0 cm', corr:'0.72', baseline:83.8, enso:41.4, change:'−51%', description:'The reported monthly model improves considerably with contemporaneous ENSO.', note:'For Los Angeles, the reported held-out error drops by about 51% when same-month ENSO is included.'},
+      sd: {name:'San Diego', season:'14.6 cm', corr:'0.72', baseline:100.0, enso:55.2, change:'−45%', description:'The preliminary analysis also finds a strong same-month ENSO association in San Diego.', note:'For San Diego, the reported held-out error drops by about 45% when same-month ENSO is included.'},
+      ny: {name:'New York Harbor', season:'20.6 cm', corr:'Not robust', baseline:106.2, enso:113.0, change:'+6%', description:'Unlike Southern California, New York does not show a comparable improvement in this monthly ENSO model.', note:'For New York, the same-month ENSO model performs worse than the Fourier baseline. This does not establish a New York winter storm-surge forecast.'}
+    };
+    const maxRMSE = 120;
+    function renderStation(key) {
+      const city = stations[key];
+      if (!city) return;
+      document.getElementById('city-title').textContent = city.name;
+      document.getElementById('city-description').textContent = city.description;
+      document.getElementById('city-season').textContent = city.season;
+      document.getElementById('city-corr').textContent = city.corr;
+      document.getElementById('city-change').textContent = city.change;
+      document.getElementById('baseline-text').textContent = city.baseline.toFixed(1) + ' mm';
+      document.getElementById('enso-text').textContent = city.enso.toFixed(1) + ' mm';
+      document.getElementById('baseline-bar').style.width = (100 * city.baseline / maxRMSE) + '%';
+      document.getElementById('enso-bar').style.width = (100 * city.enso / maxRMSE) + '%';
+      document.getElementById('city-note').textContent = city.note;
+      document.querySelectorAll('.tab').forEach(button => {
+        const selected = button.dataset.city === key;
+        button.setAttribute('aria-selected', String(selected));
+      });
+    }
+    document.querySelectorAll('.tab').forEach(button => {
+      button.addEventListener('click', () => renderStation(button.dataset.city));
+    });
+    renderStation('la');
+  </script>
+</body>
+</html>
