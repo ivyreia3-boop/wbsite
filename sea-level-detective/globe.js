@@ -31,13 +31,13 @@ function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN i
   }
   return lut;
 }
-const SANG = [165,70,47], INKB = [47,88,120];
+const SANG = [139,58,43], INKB = [58,78,104];   // red chalk and iron-gall blue-black, as the clue inks
 // the colour key under the globe, in the same washes as the texture (blue ink, bare paper, red chalk)
 function scaleHtml(L) {
   if (!L.cm) return "";
   const n = v => (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v);
   return `<span class="ms-scale" role="img" aria-label="colour scale from ${n(-L.vmax)} to ${n(L.vmax)} ${L.unit}">` +
-    `<i style="background:linear-gradient(90deg,rgb(82,110,123),rgb(145,158,160),#ede6d6,rgb(197,151,131),rgb(170,97,74))"></i>` +
+    `<i style="background:linear-gradient(90deg,rgb(118,126,132),rgb(166,168,165),#ede6d6,rgb(195,161,145),rgb(167,115,98))"></i>` +
     `<span class="ms-ticks"><b>${n(-L.vmax)}</b><b>0</b><b>${n(L.vmax)} ${L.unit}</b></span></span>`;
 }
 const day = 86400000;
@@ -196,7 +196,7 @@ async function composeImagery(L, date, z, base) {
       if (t !== t) continue;
       vals[p] = t;
       const s = Math.abs(t), ink = t > 0 ? SANG : INKB, x = p % W, y = (p / W) | 0;
-      let a = 0.8 * s ** 0.75;
+      let a = 0.65 * s ** 0.75;
       if (s > 0.5 && (t > 0 ? (x + y) % 9 : (x - y + 9 * W) % 9) < 2) a = Math.min(1, a + 0.35 * (s - 0.5) / 0.5 + 0.12);   // hatching
       for (let k = 0; k < 3; k++) o[i + k] = pd[i + k] * (1 - a * (1 - ink[k] / 255));
     }
