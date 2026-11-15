@@ -37,7 +37,7 @@
         <div id="globe" role="img" aria-label="Rotating globe showing where on Earth data are linked to storm-surge days in New York Harbor"></div>
         <div class="hud" aria-hidden="true">
           <span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
-          <div class="hud-mirror">le acque lontane parlano al porto · il Pacifico sa l’inverno prima</div>
+          
           <div class="hud-bl" id="hud-cursor">move the pen over the Earth</div>
         </div>
 
@@ -153,7 +153,7 @@
     <article class="panel span-6" id="harbor" aria-labelledby="harbor-title">
       <h2 class="panel-h" id="harbor-title">…and New York gets more storm surges</h2>
       <p class="panel-lede">A <strong>storm-surge day</strong>: the water left after the tide averages more than 30 cm above normal at the
-        Battery, Manhattan (Sweet &amp; Zervas 2011). Counted for every October–April since 1980.</p>
+        Battery, Manhattan (<a href="https://doi.org/10.1175/MWR-D-10-05043.1" target="_blank" rel="noopener">Sweet &amp; Zervas 2011</a>). Counted for every October–April since 1980.</p>
       <div class="tiles tiles-2" id="ntr-tiles"></div>
       <figure class="chart-card">
         <div class="chart-ctrl">
@@ -241,7 +241,7 @@
       <div id="e1chart" class="chart short" role="img" aria-label="False alarm rate by test"></div>
       <figcaption id="e1-caption" class="caption"></figcaption>
     </figure>
-    <p class="note">Red bar: the memory-aware fit the detective uses. Its “years of records needed” match Weatherhead et al. (1998).</p>
+    <p class="note">Red bar: the memory-aware fit the detective uses. Its “years of records needed” match <a href="https://doi.org/10.1029/98JD00995" target="_blank" rel="noopener">Weatherhead et al. (1998)</a>.</p>
   </article>
 
   <article class="panel span-5" aria-labelledby="pacific-title">
@@ -262,14 +262,20 @@
       <div>
         <h3>Data</h3>
         <ul id="sources" class="plain">
-          <li><strong>NASA GISTEMP v4</strong> surface temperature, including the El Niño region (Niño3.4), for the globe and the forecast.</li>
-          <li><strong>NASA POWER</strong> (MERRA-2) winds and air pressure over the New York Bight, the North Atlantic and the Arctic.</li>
-          <li><strong>NASA GIBS</strong> satellite pictures: sea temperature (GHRSST MUR), sea height (MEaSUREs) and true colour (VIIRS).</li>
-          <li><strong>NASA-SSH</strong> gridded sea-surface height (PO.DAAC, doi:10.5067/NSREF-SG0V1), 1992–present, with the NASA-SSH
+          <li><a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noopener"><strong>NASA GISTEMP v4</strong></a> surface temperature, including the El Niño region (Niño3.4), for the globe and the forecast.</li>
+          <li><a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener"><strong>NASA POWER</strong></a> (MERRA-2) winds and air pressure over the New York Bight, the North Atlantic and the Arctic.</li>
+          <li><a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noopener"><strong>NASA GIBS</strong></a> satellite pictures:
+            sea height from altimetry (<a href="https://podaac.jpl.nasa.gov/dataset/SEA_SURFACE_HEIGHT_ALT_GRIDS_L4_2SATS_5DAY_6THDEG_V_JPL1812" target="_blank" rel="noopener">MEaSUREs gridded SSH v1812</a>,
+            also behind the altimetry clue map), sea temperature (<a href="https://podaac.jpl.nasa.gov/dataset/MUR25-JPL-L4-GLOB-v04.2" target="_blank" rel="noopener">GHRSST MUR 0.25° v4.2</a>)
+            and true colour (<a href="https://worldview.earthdata.nasa.gov/?l=VIIRS_SNPP_CorrectedReflectance_TrueColor" target="_blank" rel="noopener">VIIRS, as in NASA Worldview</a>).</li>
+          <li><a href="https://doi.org/10.5067/NSREF-SG0V1" target="_blank" rel="noopener"><strong>NASA-SSH</strong></a> gridded sea-surface height (PO.DAAC), 1992–present, with the NASA-SSH
             global sea level and ENSO indicators.</li>
-          <li><strong>NOAA CO-OPS</strong> tide gauges: hourly water level and tide predictions at the Battery (8518750) for storm surges;
+          <li><a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750" target="_blank" rel="noopener"><strong>NOAA CO-OPS</strong></a> tide gauges: hourly water level and tide predictions at the Battery (8518750) for storm surges;
             monthly sea level at the Battery, La Jolla and San Francisco and along the East Coast.</li>
-          <li><strong>NOAA CPC</strong> Oceanic Niño Index and other climate indices; <strong>USGS</strong> Hudson River flow.</li>
+          <li><strong>NOAA CPC</strong> <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php" target="_blank" rel="noopener">Oceanic Niño Index</a> and
+            <a href="https://www.cpc.ncep.noaa.gov/data/teledoc/telecontents.shtml" target="_blank" rel="noopener">teleconnection indices</a> (NAO, AO, PNA);
+            NOAA NCEI <a href="https://www.ncei.noaa.gov/access/monitoring/pdo/" target="_blank" rel="noopener">PDO</a>; NSIDC <a href="https://nsidc.org/data/g02135" target="_blank" rel="noopener">Sea Ice Index</a>;
+            <strong>USGS</strong> <a href="https://waterdata.usgs.gov/monitoring-location/USGS-01358000/" target="_blank" rel="noopener">Hudson River at Green Island</a>.</li>
         </ul>
         <p class="note">Sea-level series are in millimetres, with the 1993–2012 average set to zero. Tide gauges measure sea level
           against the land beside them; satellites measure it against the centre of the Earth.</p>
@@ -282,7 +288,7 @@
         <h3>The sea-level detective</h3>
         <p>For the chosen place and years we fit a trend line plus the yearly cycle (and El Niño, when removed), and widen the
           uncertainty because sea level remembers last month. A rise counts as real when its 95% range stays above zero.
-          “Years of records needed” follows Weatherhead et al. (1998).</p>
+          “Years of records needed” follows <a href="https://doi.org/10.1029/98JD00995" target="_blank" rel="noopener">Weatherhead et al. (1998)</a>.</p>
         <h3>Use of AI</h3>
         <p class="note">AI tools (Claude, Codex, Kimi) helped with literature search, code and drafting. Every number comes from our
           open-source pipeline and was checked by the team.</p>
