@@ -452,3 +452,16 @@ main a[href^="http"]:hover { text-decoration-color: currentColor; }
 .gk-time .gk-t-ahead { fill: var(--ink); font-size: 10.5px; font-style: italic; }
 .gk-time .gk-t-y { font-size: 9.5px; font-style: italic; }
 .globe-key { width: min(360px, 32%); }
+
+/* East / West coast switch (stage title strip) and the slide between coasts */
+.coast-switch { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font-style: italic; color: var(--ink-soft); }
+.coast-switch .cs-lab { font-size: .86rem; }
+.coast-switch button { font: inherit; font-style: italic; font-size: .86rem; padding: 2px 11px; border-radius: 999px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(59,38,20,.35); color: var(--ink); }
+.coast-switch button:hover { background: rgba(139,58,43,.08); }
+.coast-switch button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #f8f5ee; }
+html { overflow-x: clip; }
+#world, .board { transition: transform .45s cubic-bezier(.45,.05,.25,1), opacity .45s ease; }
+#world.cs-leave, .board.cs-leave { transform: translateX(calc(var(--cs-dir) * 9vw)); opacity: 0; }
+html.cs-arriving #world, html.cs-arriving .board { transform: translateX(calc(var(--cs-from) * 9vw)); opacity: 0; transition: none; }
+@media (prefers-reduced-motion: reduce) { #world, .board { transition: none; } }

@@ -1,0 +1,376 @@
+{
+ "sources": {
+  "enso": "NOAA ONI (fallback)",
+  "nao": null,
+  "wind": null
+ },
+ "threshold_m": 0.12035250684931507,
+ "seasons": [
+  {
+   "start_year": 1980,
+   "surge_days": 7.0,
+   "enso_aug_sd": -0.01,
+   "months": 7
+  },
+  {
+   "start_year": 1981,
+   "surge_days": 3.0,
+   "enso_aug_sd": -0.22,
+   "months": 7
+  },
+  {
+   "start_year": 1982,
+   "surge_days": 25.0,
+   "enso_aug_sd": 1.31,
+   "months": 7
+  },
+  {
+   "start_year": 1983,
+   "surge_days": 3.0,
+   "enso_aug_sd": -0.01,
+   "months": 7
+  },
+  {
+   "start_year": 1984,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.21,
+   "months": 7
+  },
+  {
+   "start_year": 1985,
+   "surge_days": 4.0,
+   "enso_aug_sd": -0.35,
+   "months": 7
+  },
+  {
+   "start_year": 1986,
+   "surge_days": 8.0,
+   "enso_aug_sd": 0.64,
+   "months": 7
+  },
+  {
+   "start_year": 1987,
+   "surge_days": 2.0,
+   "enso_aug_sd": 1.9,
+   "months": 7
+  },
+  {
+   "start_year": 1988,
+   "surge_days": 0.0,
+   "enso_aug_sd": -1.36,
+   "months": 7
+  },
+  {
+   "start_year": 1989,
+   "surge_days": 2.0,
+   "enso_aug_sd": -0.38,
+   "months": 7
+  },
+  {
+   "start_year": 1990,
+   "surge_days": 2.0,
+   "enso_aug_sd": 0.47,
+   "months": 7
+  },
+  {
+   "start_year": 1991,
+   "surge_days": 29.0,
+   "enso_aug_sd": 0.91,
+   "months": 7
+  },
+  {
+   "start_year": 1992,
+   "surge_days": 10.0,
+   "enso_aug_sd": 0.17,
+   "months": 7
+  },
+  {
+   "start_year": 1993,
+   "surge_days": 1.0,
+   "enso_aug_sd": 0.34,
+   "months": 7
+  },
+  {
+   "start_year": 1994,
+   "surge_days": 8.0,
+   "enso_aug_sd": 0.44,
+   "months": 7
+  },
+  {
+   "start_year": 1995,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.62,
+   "months": 7
+  },
+  {
+   "start_year": 1996,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.27,
+   "months": 7
+  },
+  {
+   "start_year": 1997,
+   "surge_days": 23.0,
+   "enso_aug_sd": 2.31,
+   "months": 7
+  },
+  {
+   "start_year": 1998,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.97,
+   "months": 7
+  },
+  {
+   "start_year": 1999,
+   "surge_days": 0.0,
+   "enso_aug_sd": -1.11,
+   "months": 7
+  },
+  {
+   "start_year": 2000,
+   "surge_days": 9.0,
+   "enso_aug_sd": -0.43,
+   "months": 7
+  },
+  {
+   "start_year": 2001,
+   "surge_days": 2.0,
+   "enso_aug_sd": -0.1,
+   "months": 7
+  },
+  {
+   "start_year": 2002,
+   "surge_days": 6.0,
+   "enso_aug_sd": 0.86,
+   "months": 7
+  },
+  {
+   "start_year": 2003,
+   "surge_days": 1.0,
+   "enso_aug_sd": 0.24,
+   "months": 7
+  },
+  {
+   "start_year": 2004,
+   "surge_days": 21.0,
+   "enso_aug_sd": 0.74,
+   "months": 7
+  },
+  {
+   "start_year": 2005,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.11,
+   "months": 7
+  },
+  {
+   "start_year": 2006,
+   "surge_days": 0.0,
+   "enso_aug_sd": 0.48,
+   "months": 7
+  },
+  {
+   "start_year": 2007,
+   "surge_days": 1.0,
+   "enso_aug_sd": -0.9,
+   "months": 7
+  },
+  {
+   "start_year": 2008,
+   "surge_days": 1.0,
+   "enso_aug_sd": -0.18,
+   "months": 7
+  },
+  {
+   "start_year": 2009,
+   "surge_days": 15.0,
+   "enso_aug_sd": 0.77,
+   "months": 7
+  },
+  {
+   "start_year": 2010,
+   "surge_days": 4.0,
+   "enso_aug_sd": -1.49,
+   "months": 7
+  },
+  {
+   "start_year": 2011,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.56,
+   "months": 7
+  },
+  {
+   "start_year": 2012,
+   "surge_days": 0.0,
+   "enso_aug_sd": 0.56,
+   "months": 7
+  },
+  {
+   "start_year": 2013,
+   "surge_days": 1.0,
+   "enso_aug_sd": -0.36,
+   "months": 7
+  },
+  {
+   "start_year": 2014,
+   "surge_days": 4.0,
+   "enso_aug_sd": 0.15,
+   "months": 7
+  },
+  {
+   "start_year": 2015,
+   "surge_days": 18.0,
+   "enso_aug_sd": 2.23,
+   "months": 7
+  },
+  {
+   "start_year": 2016,
+   "surge_days": 5.0,
+   "enso_aug_sd": -0.36,
+   "months": 7
+  },
+  {
+   "start_year": 2017,
+   "surge_days": 1.0,
+   "enso_aug_sd": -0.02,
+   "months": 7
+  },
+  {
+   "start_year": 2018,
+   "surge_days": 4.0,
+   "enso_aug_sd": 0.44,
+   "months": 7
+  },
+  {
+   "start_year": 2019,
+   "surge_days": 6.0,
+   "enso_aug_sd": 0.32,
+   "months": 7
+  },
+  {
+   "start_year": 2020,
+   "surge_days": 4.0,
+   "enso_aug_sd": -0.47,
+   "months": 7
+  },
+  {
+   "start_year": 2021,
+   "surge_days": 2.0,
+   "enso_aug_sd": -0.51,
+   "months": 7
+  },
+  {
+   "start_year": 2022,
+   "surge_days": 1.0,
+   "enso_aug_sd": -0.91,
+   "months": 7
+  },
+  {
+   "start_year": 2023,
+   "surge_days": 10.0,
+   "enso_aug_sd": 1.63,
+   "months": 7
+  },
+  {
+   "start_year": 2024,
+   "surge_days": 0.0,
+   "enso_aug_sd": 0.02,
+   "months": 7
+  },
+  {
+   "start_year": 2025,
+   "surge_days": 0.0,
+   "enso_aug_sd": -0.26,
+   "months": 7
+  }
+ ],
+ "season_outlook": {
+  "n_train_seasons": 32,
+  "n_test_seasons": 14,
+  "rate_ratio_per_sd": 2.3000890213671052,
+  "rate_ratio_ci95": [
+   1.5971274424569013,
+   3.3124529486983945
+  ],
+  "p": 7.608737616544278e-06,
+  "dispersion": 6.0443303816897025,
+  "test_deviance_skill_vs_trend_only": 0.4623638741486916,
+  "mean_surge_days_per_season_train": 5.84375,
+  "mean_surge_days_per_season_test": 4.0,
+  "all_seasons": {
+   "n": 46,
+   "rate_ratio_per_sd": 2.276523509704178,
+   "ci95": [
+    1.7257869554803251,
+    3.003012204825367
+   ],
+   "p": 5.83170310006134e-09,
+   "leave_one_out_rr_range": [
+    2.215369095094079,
+    2.541185541948864
+   ],
+   "leave_one_out_max_p": 2.439491115960871e-07
+  },
+  "strong_el_nino_seasons": {
+   "1982": 25.0,
+   "1987": 2.0,
+   "1997": 23.0,
+   "2015": 18.0,
+   "2023": 10.0
+  },
+  "observed_enso_aug_max_sd": 2.3087254678137215,
+  "outlook": {
+   "season": "2026-10..2027-04",
+   "enso_aug_sd": 2.77209862924094,
+   "expected_surge_days": 36.23674128916599,
+   "expected_ci95": [
+    7.0527599964967935,
+    186.18263203486057
+   ],
+   "trend_only_expected": 3.431230692355549,
+   "extrapolation": true,
+   "note": "Expected count with a 95% interval for the mean, not a prediction interval for one season."
+  }
+ },
+ "lag_analysis": {
+  "enso": [
+   {
+    "lag": 0,
+    "r": 0.2263280597143826,
+    "significant": true
+   },
+   {
+    "lag": 1,
+    "r": 0.2707743956707882,
+    "significant": true
+   },
+   {
+    "lag": 2,
+    "r": 0.11052564597280666,
+    "significant": false
+   },
+   {
+    "lag": 3,
+    "r": 0.057502119833570016,
+    "significant": false
+   },
+   {
+    "lag": 4,
+    "r": -0.07851852369833051,
+    "significant": false
+   },
+   {
+    "lag": 5,
+    "r": -0.06695888196988577,
+    "significant": false
+   },
+   {
+    "lag": 6,
+    "r": -0.11835307059753408,
+    "significant": false
+   }
+  ],
+  "nao": null,
+  "wind": null
+ },
+ "models": null
+}

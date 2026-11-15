@@ -19,6 +19,7 @@ const LAYERS = {
 };
 // NASA's own colour scales for the two anomaly layers (from gibs.earthdata.nasa.gov/colormaps/v1.3/*.xml): [r, g, b, value].
 // Used to turn each imagery pixel back into its value, which is then redrawn in the manuscript palette.
+import { COAST } from "./coast.js";
 const CMAPS = fetch("data/gibs_colormaps.json").then(r => r.json()).catch(() => null);
 const LUTS = {};
 function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN if no colour on NASA's scale is close)
@@ -588,7 +589,7 @@ export function renderWorld(G, css, layoutBase) {
     if (bars.some(o => o.hide)) barsTimer = setTimeout(() => { if (world && state.mode === "signal") world.pointsData(world.pointsData().filter(o => !o.hide)); }, TWEEN_MS + 120);
     const arcs = local ? [] : m === "signal" ? [...staticArcs, ...state.clicks] : m === "winter" ? sigArcs() : state.clicks;
     world.arcsData(withGlow(arcs));
-    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? (m === "winter" ? -0.4 : 1.6) : 0), lng: t.lng + (t.battery ? (m === "winter" ? 6.5 : -5) : 1.1), alt: t.alt + 0.02,   // label on the side away from the open sidebar
+    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? (COAST.id === "west" ? 0.4 : m === "winter" ? -0.4 : 1.6) : 0), lng: t.lng + (t.battery ? (COAST.id === "west" ? 7 : m === "winter" ? 6.5 : -5) : 1.1), alt: t.alt + 0.02,   // label on the side away from the open sidebar
       text: t.battery ? `The Battery ${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))} mm`
         : `${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))}`, size: t.battery ? 0.9 : 0.55, color: t.battery ? NEON.cyan : t.color }));
     const labels = local ? gaugeLabels : [m === "winter" ? { ...nyLabel, lat: 45, lng: -80, alt: 0.02 } : nyLabel, ...(m === "signal" ? sourceLabels : m === "winter" ? sigLabels() : []),
@@ -744,7 +745,12 @@ export function renderWorld(G, css, layoutBase) {
       .pathColor(() => NEON.amber).pathStroke(1.4).pathDashLength(0.06).pathDashGap(0.02).pathDashAnimateTime(6000).pathTransitionDuration(0)
       .ringLat("lat").ringLng("lng").ringColor(d => t => fade(d.color || NEON.cyan, Math.max(0, 1 - t)))
       .ringMaxRadius(d => d.maxR || 4).ringPropagationSpeed(d => d.speed || 1.5).ringRepeatPeriod(d => d.period || 1400);
-    world.pointOfView({ lat: 18, lng: -108, altitude: el.clientWidth < 520 ? 3.1 : 2.2 }, 0);
+    {   // start over this coast; arriving from the other coast, start over that one and swing across
+      const from = document.documentElement.dataset.coastFrom, other = from ? (from === "west" ? [14, -128, 2.2] : [18, -108, 2.2]) : null;
+      const [la0, lo0, al0] = other || COAST.pov.signal;
+      world.pointOfView({ lat: la0, lng: lo0, altitude: el.clientWidth < 520 ? al0 * 1.4 : al0 }, 0);
+      if (other) setTimeout(() => { const [la, lo, al] = COAST.pov.signal; world.pointOfView({ lat: la, lng: lo, altitude: el.clientWidth < 520 ? al * 1.4 : al }, 1600); }, 350);
+    }
     // keep the page light: draw at most 1.25 device pixels per CSS pixel, and stop drawing the globe entirely while it
     // is scrolled out of view or the tab is in the background
     try { world.renderer().setPixelRatio(Math.min(1.25, window.devicePixelRatio || 1)); } catch (e) { /* older globe.gl */ }
@@ -830,7 +836,7 @@ export function renderWorld(G, css, layoutBase) {
   const moments = [
     { text: "This year's El Niño · Aug 2026 (temperature)", layer: "sst", date: "2026-08-15", pov: [5, -135, 2.0] },
     { text: "Great El Niño · Nov 1997 (sea height)", layer: "ssh", date: "1997-11-15", pov: [5, -135, 2.0] },
-    { text: "Blizzard hits New York · Jan 2016", layer: "clouds", date: "2016-01-23", pov: [36, -70, 1.3] },
+    COAST.moment,
   ];
   $("pic-moments").innerHTML = moments.map((p, i) => `<button type="button" data-i="${i}" data-date="${p.date}">${p.text}</button>`).join("");
   $("pic-moments").addEventListener("click", e => {
@@ -871,9 +877,9 @@ export function renderWorld(G, css, layoutBase) {
     { text: "This year's El Niño · Aug 2026", layer: "sst", date: "2026-08-15", pov: [5, -135, 2.0] },
     { text: "Great El Niño · Nov 1997", layer: "ssh", date: "1997-11-15", pov: [5, -135, 2.0] },
     { text: "El Niño · Nov 2015", layer: "ssh", date: "2015-11-15", pov: [5, -135, 2.0] },
-    { text: "Blizzard hits New York · Jan 2016", layer: "clouds", date: "2016-01-23", pov: [36, -70, 1.3] },
+    COAST.moment,
     ...(big ? [{ text: `Biggest recent surge · ${toDate(big.date).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })}`,
-      layer: "clouds", date: big.date, pov: [36, -70, 1.3] }] : []),
+      layer: "clouds", date: big.date, pov: COAST.pov.local }] : []),
   ];
   $("nasa-presets").innerHTML = `<span class="presets-ask">Jump to a moment:</span>` + presets.map((p, i) => `<button type="button" data-i="${i}">${p.text}</button>`).join("");
   $("nasa-presets").addEventListener("click", e => {
@@ -1044,8 +1050,8 @@ export function renderWorld(G, css, layoutBase) {
     document.querySelector(".pic-row").hidden = src === "local";   // no satellite picture under the tide gauges
     if (state.mode === "signal") applySignalSurface();
     if (state.mode === "winter") setWinter(state.winter);
-    if (src === "local") fly(36, -72, 0.8);
-    else if (was === "local") state.mode === "winter" ? fly(27, -84, 1.7) : fly(18, -108, 2.2);
+    if (src === "local") fly(...COAST.pov.local);
+    else if (was === "local") state.mode === "winter" ? fly(...COAST.pov.winter) : fly(...COAST.pov.signal);
     $("legend-signal").hidden = src === "local" || !!state.pic;   // the clue legend means nothing under the tide gauges
     updateKey();
   }
@@ -1062,9 +1068,9 @@ export function renderWorld(G, css, layoutBase) {
     $("drawer-title").textContent = { signal: "I · Find the clue", nasa: "See it from space", winter: "II · Test a winter" }[mode];
     $("winter-sheet").hidden = mode !== "winter";
     openDrawer(true);
-    if (mode === "signal") { state.pic = null; showPic(null); applySignalSurface(); $("globe-info").innerHTML = hint; state.src === "local" ? fly(36, -72, 0.8) : fly(18, -108, 2.2); }
+    if (mode === "signal") { state.pic = null; showPic(null); applySignalSurface(); $("globe-info").innerHTML = hint; state.src === "local" ? fly(...COAST.pov.local) : fly(...COAST.pov.signal); }
     if (mode === "nasa") { $("globe-info").innerHTML = nasaHint; refresh(); setLayer(state.layer, state.date); fly(5, -135, 2.0); }
-    if (mode === "winter") { state.src === "local" ? fly(36, -72, 0.8) : fly(27, -84, 1.7); setWinter(state.winter || Math.max(0, WINTERS.findIndex(w => w.year === 2015))); }
+    if (mode === "winter") { state.src === "local" ? fly(...COAST.pov.local) : fly(...COAST.pov.winter); setWinter(state.winter || Math.max(0, WINTERS.findIndex(w => w.year === 2015))); }
   }
   // one stage, pop-up sidebars: the rail picks the mode and opens its sidebar (tap the open one again to fold it away);
   // the note slides in on the right. The globe slides to stay centred in the space the sidebars leave free.
