@@ -305,8 +305,7 @@ function winterLab(host, SW, P, st, onPick, onChange) {
     <div class="wl-tally" id="wl-tally" aria-live="polite"></div>
     <div class="wl-key" id="wl-key"></div>
     <svg class="wl-time" id="wl-time" viewBox="0 0 ${VW} 300" role="img"></svg>
-    <p class="wl-note">Each winter was predicted without peeking at it; the “simple guess” uses only the long-term average. ★ = passed our strict test on recent winters.
-      Tap a winter to see it on the globe.</p>`;
+    <p class="wl-note">Simple guess = long-term average. ★ = passed our test on recent winters.</p>`;
   const lead = host.querySelector("#wl-lead"), time = host.querySelector("#wl-time");
   const chipsEl = host.querySelector("#wl-chips"), keyEl = host.querySelector("#wl-key"), tallyEl = host.querySelector("#wl-tally");
   const slot = document.getElementById("wl-slot");   // the clue buttons live in the sidebar, the timeline in the sheet below
@@ -443,10 +442,8 @@ function winterLab(host, SW, P, st, onPick, onChange) {
     time.setAttribute("aria-label", `One row per clue, winters ${SW.seasons[0]} to ${SW.seasons[n - 1]}: ${sigs.map(k => `${label(k)} read in ${MONTHS[monthOf(k) - 1]}`).join("; ")}.`);
     ptr = time.querySelector("#wl-ptr");
     tallyEl.innerHTML = "";
-    keyEl.innerHTML = `<span>Each row = one clue, read in its own month.</span><span><i class="wt-line dash"></i>middle line: the simple guess</span>` +
-      `<span><i class="wl-bar"></i>bars: how far each winter really landed above or below it (coloured when the clue called it better)</span>` +
-      `<span><i class="wt-line" style="background:#a5462f"></i>line: what the clue predicted</span>` +
-      `<span class="wl-how">Hover or drag across the winters · tap a month dot to read a clue earlier or later · tap a clue's name to bring it forward</span>`;
+    keyEl.innerHTML = `<span><i class="wt-line dash"></i>simple guess</span><span><i class="wl-bar"></i>what happened (coloured = clue was closer)</span>` +
+      `<span><i class="wt-line" style="background:#a5462f"></i>clue's prediction</span><span class="wl-how">drag across · tap a month dot</span>`;
   }
 
   function render() {
@@ -680,7 +677,7 @@ export function renderWorld(G, css, layoutBase) {
           : `When it is <strong>${r > 0 ? "warmer" : "cooler"}</strong> than usual here in ${MONTHS[m - 1]}, ${lead}, New York tends to get more storm-surge days.`}</p>
       ${inBox ? `<p class="ok">This is the El Niño region, the clue that held up when tested on recent winters.</p>`
         : `<p class="warn">The El Niño region (dashed outline) is the clue that held up on recent winters.</p>`}
-      <p class="muted">Thicker line = closer link. <button type="button" class="link-btn" data-next-clue>Next clue ›</button></p>`;
+      <p class="muted"><button type="button" class="link-btn" data-next-clue>Next clue ›</button></p>`;
     openNota(true);   // a tap always brings the note back
     refresh();
   }
@@ -935,7 +932,7 @@ export function renderWorld(G, css, layoutBase) {
 
   // ------------------------------------------------------------------ mode switch
   const hint = `<div class="hud-h"><span class="blink">§</span> Nota · ask the Earth</div>
-    <p>Tap anywhere on Earth. A line flies to New York: the thicker it is, the more that place knows about New York's coming winter.</p>
+    <p>Tap a coloured place to see what it knows about New York's next winter.</p>
     <dl class="hud-rows"><dt>Clues tested</dt><dd>${G.predictors.length}</dd><dt>Proven clue</dt><dd class="ok">★ El Niño</dd>
       <dt>Winters checked</dt><dd>${G.n_seasons}</dd><dt>Distance</dt><dd>${km(P.nino34_giss ? P.nino34_giss.distance_km : 8400)} km</dd></dl>`;
   const nasaHint = `<div class="hud-h"><span class="blink">§</span> Nota · seen from space</div>
@@ -953,16 +950,15 @@ export function renderWorld(G, css, layoutBase) {
     const k = $("gk-text"); if (!k) return;
     const s = SRC_TXT[state.src], cm = CM(), parts = [];
     if (state.mode === "signal" && !state.pic)
-      parts.push(`<b>Bars</b>: places where ${s.what} in <b>${MONTHS[state.month - 1]}</b> goes with New York's storm-surge days the next winter ` +
-        `(${s.from}, ${cm.years[0]}–${cm.years[1]}, ${cm.n_seasons} winters). <i class="sw r"></i>${s.hi} → more surges · <i class="sw b"></i>${s.lo} → more surges · taller = closer link.`);
+      parts.push(`<b>Bars</b>: ${s.what} in <b>${MONTHS[state.month - 1]}</b> linked to New York's next winter (${s.from}, ${cm.n_seasons} winters). ` +
+        `<i class="sw r"></i>${s.hi} <i class="sw b"></i>${s.lo} → more surges; taller = stronger.`);
     if (state.shown) {
       const L = state.shown.layer;
-      parts.push(L === "clouds" ? `<b>Picture</b>: what a NASA satellite (VIIRS) saw on <b>${fmtDay(state.shown.date)}</b>, clouds included.`
-        : `<b>Picture</b>: NASA ${L === "ssh" ? "sea-surface height (altimetry, MEaSUREs)" : "sea temperature (GHRSST MUR)"} on <b>${fmtDay(state.shown.date)}</b>, ` +
-          `against normal: <i class="sw r"></i>${L === "ssh" ? "higher" : "warmer"} · <i class="sw b"></i>${L === "ssh" ? "lower" : "cooler"} · ink lines every ${L === "ssh" ? "10 cm" : "1 °C"}.`);
+      parts.push(L === "clouds" ? `<b>Picture</b>: NASA VIIRS, <b>${fmtDay(state.shown.date)}</b>.`
+        : `<b>Picture</b>: NASA ${L === "ssh" ? "sea height" : "sea temperature"}, <b>${fmtDay(state.shown.date)}</b>. ` +
+          `<i class="sw r"></i>${L === "ssh" ? "higher" : "warmer"} <i class="sw b"></i>${L === "ssh" ? "lower" : "cooler"} than normal.`);
     }
-    if (!parts.length) parts.push(`<b>Globe</b>: the Earth on parchment; tap a coloured place, or switch the picture on.`);
-    parts.push(`<b>Lines</b> fly to New York Harbor from the clue you picked.`);
+    if (!parts.length) parts.push(`Tap a coloured place, or show the picture.`);
     k.innerHTML = parts.join(" ");
     if ($("lg-hi")) { $("lg-hi").textContent = `${s.hi} here → more storm-surge days in New York`; $("lg-lo").textContent = `${s.lo} here → more storm-surge days`; }
     document.querySelectorAll("#gk-switch button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.src === state.src)));
@@ -1014,10 +1010,8 @@ export function renderWorld(G, css, layoutBase) {
   setMode("signal");
   window.seaLevelGlobe = { world, state, ask, setMode, setMonth, setWinter, setLayer };   // for tests and scripted demos
 
-  $("globe-caption").textContent = `Each bar marks a place whose sea height or temperature in the chosen month tracks how many storm-surge days New York's ` +
-    `Battery gets the next winter; taller bar, closer link. Switch on the globe: NASA altimetry (MEaSUREs sea-surface height, ` +
-    `${SSHM ? `${SSHM.years[0]}–${SSHM.years[1]}, ${SSHM.n_seasons} winters` : "not loaded"}) or NASA GISTEMP temperature (${G.years[0]}–${G.years[1]}, ${G.n_seasons} winters). ` +
-    `Surge days: NOAA tide gauge. The outlined El Niño region is the clue that held up when tested on recent winters. Satellite pictures: NASA GIBS. Drag to spin, tap to ask.`;
+  $("globe-caption").textContent = `Altimetry ${SSHM ? `${SSHM.years[0]}–${SSHM.years[1]}` : ""}, temperature ${G.years[0]}–${G.years[1]}; ` +
+    `surge days from NOAA's Battery tide gauge. Drag to spin, tap to ask.`;
 
   // ------------------------------------------------------------------ distance charts
   const s1 = css("--series-1"), s2 = css("--series-2");
@@ -1063,10 +1057,8 @@ export function renderWorld(G, css, layoutBase) {
   Plotly.react("lead-curve", [curve("nino34_giss", "NASA GISTEMP Niño3.4", s1), curve("oni", "NOAA ONI", s2)], L, { displayModeBar: false, responsive: true });
   const best = G.lead_curve.filter(r => r.index === "nino34_giss").reduce((a, b) => (b.loo > a.loo ? b : a));
   const first = G.lead_curve.filter(r => r.index === "nino34_giss" && r.p < 0.01)[0];
-  $("lead-caption").innerHTML = `Each dot reads El Niño in one month and shows how many ` +
-    `times more storm-surge days New York gets the next winter for each step of El Niño (one step = a typical year-to-year swing; 1 = no effect; ` +
-    `bars = 95% range). The clue appears in ${MONTHS[first.month - 1]}. By ${MONTHS[best.month - 1]}, ${10 - best.month} months before the stormy season, ` +
-    `it reads ×${best.rr.toFixed(2)}. NASA's and NOAA's temperature records agree.`;
+  $("lead-caption").innerHTML = `× storm-surge days per step of El Niño (1 = no effect; bars = 95% range). ` +
+    `Clear from ${MONTHS[first.month - 1]}, strongest in ${MONTHS[best.month - 1]}.`;
 
   // ------------------------------------------------------------------ charts below talk to the globe
   // tap a month on the lead-time curve: Test a winter opens with El Niño read in that month;
@@ -1092,12 +1084,11 @@ export function renderWorld(G, css, layoutBase) {
     leadM = m; $("lead-month").value = String(m); $("lead-month-l").textContent = MONTHS[m - 1];
     placeBand();
     const r = LC[m], o = OUT[m], mon = MONTHS[m - 1];
-    let t = m >= 10 ? `<b>${mon}</b> is already inside the stormy season.`
-      : !r || r.p >= 0.05 ? `<b>Read in ${mon}</b>, ${10 - m} months ahead: the Pacific says little yet (×${r ? r.rr.toFixed(2) : "1.00"} per step).`
-      : `<b>Read in ${mon}</b>, ${10 - m} months ahead: each step of El Niño brings <b>×${r.rr.toFixed(2)}</b> storm-surge days.`;
-    if (o) t += ` This year's ${mon} reading: ${o.value_sd.toFixed(1)} steps${o.extrapolation ? ", the strongest since 1980" : ""}. ` +
-      `Winter 2026–27 outlook: <b>about ${Math.round(o.expected)} storm-surge days</b> (likely ${Math.round(o.ci[0])}–${Math.round(o.ci[1])}), against about ${Math.round(o.trend_only)} in a normal winter.`;
-    if (m <= 9) t += ` <button type="button" class="link-btn" id="lead-go">Replay 42 winters read in ${mon} →</button>`;
+    let t = m >= 10 ? `<b>${mon}</b>: already in the stormy season.`
+      : !r || r.p >= 0.05 ? `<b>${mon}</b>, ${10 - m} months ahead: no signal yet.`
+      : `<b>${mon}</b>, ${10 - m} months ahead: <b>×${r.rr.toFixed(2)}</b> surge days per step.`;
+    if (o) t += ` 2026–27 outlook: <b>~${Math.round(o.expected)} days</b> (normal ~${Math.round(o.trend_only)}).`;
+    if (m <= 9) t += ` <button type="button" class="link-btn" id="lead-go">Replay winters →</button>`;
     $("lead-readout").innerHTML = t;
   }
   const stopLead = () => {};   // the month now steps on its own (the page's shared animator); touching the chart pauses it

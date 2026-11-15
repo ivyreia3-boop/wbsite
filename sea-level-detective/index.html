@@ -18,19 +18,14 @@
     <p class="eyebrow">NASA Space Apps 2026 · Be An Earth System Trend Detective!</p>
     <h1>Sea Level Detective</h1>
     <p class="team">by Team <b>Poseidon SAR</b> · Maxim Zyskin, Hanyue Shen and Ningzi Chen</p>
-    <p class="lede">Can the rest of the planet tell us what New York Harbor's water will do? We tested 29 clues from
-      around the Earth. One passed: the temperature of the tropical Pacific, 8,400 km away, tells in June how many
-      storm-surge days New York will see the following winter.</p>
+    <p class="lede">29 clues from around the Earth, one that works: in June, the tropical Pacific tells how many storm-surge days
+      New York will get next winter.</p>
   </div>
 </header>
 
 <main class="wrap">
   <section id="world" aria-labelledby="world-title">
     <h2 id="world-title">Where on Earth is New York Harbor's winter written?</h2>
-    <p>Storm surges flood New York in winter. Months earlier, the far side of the planet already holds a clue.
-      <strong>I · Find the clue</strong>: tap anywhere on Earth and see how much it knows about New York's next winter, with
-      NASA's satellite picture of the ocean underneath.
-      <strong>II · Test a winter</strong>: replay 42 winters and see which clue called them best.</p>
     <div class="globe-card">
       <div class="stage-head"><b>Of the Waters of New York</b><span id="hud-mode">Folio I · where the clue lies</span></div>
       <div class="globe-stage drawer-open nota-open" id="globe-stage">
@@ -152,8 +147,8 @@
 
     <article class="panel span-6" id="harbor" aria-labelledby="harbor-title">
       <h2 class="panel-h" id="harbor-title">…and New York gets more storm surges</h2>
-      <p class="panel-lede">A <strong>storm-surge day</strong>: the water left after the tide averages more than 30 cm above normal at the
-        Battery, Manhattan (<a href="https://doi.org/10.1175/MWR-D-10-05043.1" target="_blank" rel="noopener">Sweet &amp; Zervas 2011</a>). Counted for every October–April since 1980.</p>
+      <p class="panel-lede">Storm-surge day: water 30 cm above normal at the Battery, tide removed
+        (<a href="https://doi.org/10.1175/MWR-D-10-05043.1" target="_blank" rel="noopener">Sweet &amp; Zervas 2011</a>).</p>
       <div class="tiles tiles-2" id="ntr-tiles"></div>
       <figure class="chart-card">
         <div class="chart-ctrl">
@@ -169,8 +164,7 @@
 
   <article class="panel span-8" id="explorer" aria-labelledby="explorer-title">
     <h2 class="panel-h" id="explorer-title">Is the sea rising where you live?</h2>
-    <p class="panel-lede">Pick a place and a span of years: the detective fits a trend and says whether the rise stands out from the
-      natural ups and downs. “Remove El Niño” takes the Pacific's swings out first.</p>
+    <p class="panel-lede">Pick a place and years; the detective says whether the rise stands out.</p>
     <div class="controls" role="group" aria-label="Choose what to investigate">
       <label>Place
         <select id="region"></select>
@@ -218,7 +212,7 @@
         <span>Quick spans:</span>
         <button type="button" data-span="10">last 10 years</button><button type="button" data-span="20">last 20</button>
         <button type="button" data-span="30">last 30</button><button type="button" data-span="all">all years</button>
-        <em class="tap-hint">or drag across the chart to pick the years; double-click to see them all</em>
+        <em class="tap-hint">or drag across the chart</em>
       </div>
       <div id="chart" class="chart" role="img" aria-label="Monthly sea level with fitted trend"></div>
       <figcaption id="chart-caption" class="caption"></figcaption>
@@ -231,8 +225,7 @@
 
   <article class="panel span-4" aria-labelledby="sig-title">
     <h2 class="panel-h" id="sig-title">How it avoids false alarms</h2>
-    <p class="panel-lede">Sea level remembers last month, so common tests shout “trend!” too often. On 1,000 make-believe records
-      <strong>with no trend</strong>, a fair test cries wolf 5 times in 100.</p>
+    <p class="panel-lede">Sea level remembers last month, so common tests cry “trend!” too often.</p>
     <figure class="chart-card">
       <div class="chart-ctrl">
         <label>Record length <input type="range" id="e1-years" min="0" max="5" step="1" value="0"></label> <b id="e1-years-l">10 years</b>
@@ -241,7 +234,6 @@
       <div id="e1chart" class="chart short" role="img" aria-label="False alarm rate by test"></div>
       <figcaption id="e1-caption" class="caption"></figcaption>
     </figure>
-    <p class="note">Red bar: the memory-aware fit the detective uses. Its “years of records needed” match <a href="https://doi.org/10.1029/98JD00995" target="_blank" rel="noopener">Weatherhead et al. (1998)</a>.</p>
   </article>
 
   <article class="panel span-5" aria-labelledby="pacific-title">
@@ -250,37 +242,31 @@
       <img src="img/nasa_hovmoller_equatorial.png" alt="Equatorial sea-level anomaly, longitude against time, 2015 to 2016, from NASA-SSH: positive (red) from mid-2015 to early 2016, negative (blue) by mid-2016." loading="lazy">
       <figcaption class="caption">Sea level along the equator, 2015–16 (NASA-SSH). Team analysis (M. Zyskin).</figcaption>
     </figure>
-    <p class="panel-lede">When the trade winds weaken, warm water piled up in the western Pacific surges east as slow ocean waves:
-      in 2015–16 the equatorial Pacific rose about 20 cm, then fell 20 cm as La Niña followed. NASA's radar altimeters have watched
-      this since 1992. On the East Coast El Niño arrives through winter storms: New York's average sea level barely moves, while its
-      storm-surge days go up.</p>
+    <p class="panel-lede">Trade winds weaken, warm water surges east: in 2015–16 the equatorial Pacific rose about 20 cm.
+      In New York it arrives as more winter storm surges.</p>
   </article>
 
   <article class="panel span-7" aria-labelledby="data-title">
-    <h2 class="panel-h" id="data-title">Where the data come from, and how we tested</h2>
-    <div class="two">
+    <h2 class="panel-h" id="data-title">Data</h2>
+    <ul id="sources" class="plain sources-compact">
+      <li><b>NASA</b>: <a href="https://podaac.jpl.nasa.gov/dataset/SEA_SURFACE_HEIGHT_ALT_GRIDS_L4_2SATS_5DAY_6THDEG_V_JPL1812" target="_blank" rel="noopener">MEaSUREs altimetry</a> ·
+        <a href="https://doi.org/10.5067/NSREF-SG0V1" target="_blank" rel="noopener">NASA-SSH</a> ·
+        <a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noopener">GISTEMP v4</a> ·
+        <a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">POWER</a> ·
+        <a href="https://podaac.jpl.nasa.gov/dataset/MUR25-JPL-L4-GLOB-v04.2" target="_blank" rel="noopener">GHRSST MUR</a> ·
+        <a href="https://worldview.earthdata.nasa.gov/?l=VIIRS_SNPP_CorrectedReflectance_TrueColor" target="_blank" rel="noopener">VIIRS</a>, pictures via
+        <a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noopener">GIBS</a></li>
+      <li><b>NOAA</b>: <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750" target="_blank" rel="noopener">Battery tide gauge</a> ·
+        <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php" target="_blank" rel="noopener">ONI</a> ·
+        <a href="https://www.cpc.ncep.noaa.gov/data/teledoc/telecontents.shtml" target="_blank" rel="noopener">NAO, AO, PNA</a> ·
+        <a href="https://www.ncei.noaa.gov/access/monitoring/pdo/" target="_blank" rel="noopener">PDO</a></li>
+      <li><b>Other</b>: <a href="https://nsidc.org/data/g02135" target="_blank" rel="noopener">NSIDC Sea Ice Index</a> ·
+        <a href="https://waterdata.usgs.gov/monitoring-location/USGS-01358000/" target="_blank" rel="noopener">USGS Hudson River</a></li>
+    </ul>
+    <details class="table-view">
+      <summary>How we tested</summary>
       <div>
-        <h3>Data</h3>
-        <ul id="sources" class="plain">
-          <li><a href="https://data.giss.nasa.gov/gistemp/" target="_blank" rel="noopener"><strong>NASA GISTEMP v4</strong></a> surface temperature, including the El Niño region (Niño3.4), for the globe and the forecast.</li>
-          <li><a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener"><strong>NASA POWER</strong></a> (MERRA-2) winds and air pressure over the New York Bight, the North Atlantic and the Arctic.</li>
-          <li><a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noopener"><strong>NASA GIBS</strong></a> satellite pictures:
-            sea height from altimetry (<a href="https://podaac.jpl.nasa.gov/dataset/SEA_SURFACE_HEIGHT_ALT_GRIDS_L4_2SATS_5DAY_6THDEG_V_JPL1812" target="_blank" rel="noopener">MEaSUREs gridded SSH v1812</a>,
-            also behind the altimetry clue map), sea temperature (<a href="https://podaac.jpl.nasa.gov/dataset/MUR25-JPL-L4-GLOB-v04.2" target="_blank" rel="noopener">GHRSST MUR 0.25° v4.2</a>)
-            and true colour (<a href="https://worldview.earthdata.nasa.gov/?l=VIIRS_SNPP_CorrectedReflectance_TrueColor" target="_blank" rel="noopener">VIIRS, as in NASA Worldview</a>).</li>
-          <li><a href="https://doi.org/10.5067/NSREF-SG0V1" target="_blank" rel="noopener"><strong>NASA-SSH</strong></a> gridded sea-surface height (PO.DAAC), 1992–present, with the NASA-SSH
-            global sea level and ENSO indicators.</li>
-          <li><a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750" target="_blank" rel="noopener"><strong>NOAA CO-OPS</strong></a> tide gauges: hourly water level and tide predictions at the Battery (8518750) for storm surges;
-            monthly sea level at the Battery, La Jolla and San Francisco and along the East Coast.</li>
-          <li><strong>NOAA CPC</strong> <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php" target="_blank" rel="noopener">Oceanic Niño Index</a> and
-            <a href="https://www.cpc.ncep.noaa.gov/data/teledoc/telecontents.shtml" target="_blank" rel="noopener">teleconnection indices</a> (NAO, AO, PNA);
-            NOAA NCEI <a href="https://www.ncei.noaa.gov/access/monitoring/pdo/" target="_blank" rel="noopener">PDO</a>; NSIDC <a href="https://nsidc.org/data/g02135" target="_blank" rel="noopener">Sea Ice Index</a>;
-            <strong>USGS</strong> <a href="https://waterdata.usgs.gov/monitoring-location/USGS-01358000/" target="_blank" rel="noopener">Hudson River at Green Island</a>.</li>
-        </ul>
-        <p class="note">Sea-level series are in millimetres, with the 1993–2012 average set to zero. Tide gauges measure sea level
-          against the land beside them; satellites measure it against the centre of the Earth.</p>
-      </div>
-      <div>
+        <p class="note">Sea level in mm, 1993–2012 average = 0. Tide gauges measure against the land; satellites against the Earth's centre.</p>
         <h3>How we tested the clues</h3>
         <p>We counted storm-surge days in each October–April season, 1980–2025, and checked 29 clues from around the world. Each clue
           predicts a season with a model fitted on the other seasons, so no winter helps predict itself. Clues that looked useful on
@@ -293,7 +279,7 @@
         <p class="note">AI tools (Claude, Codex, Kimi) helped with literature search, code and drafting. Every number comes from our
           open-source pipeline and was checked by the team.</p>
       </div>
-    </div>
+    </details>
     <p class="generated" id="generated"></p>
   </article>
   </section>
