@@ -270,7 +270,7 @@ function drawContours(c, vals, W, H, levels) {
 //   timeline   : surge days per winter (observed dots, trend dashed, each signal's prediction), which was closer,
 //                and the running total of days missed; a pointer marks the winter on the globe
 // Data: data/signal_winters.json (ntr/explore_signal_winters.py on the DGX).
-const INKS = ["#a5462f", "#3f7466", "#9a7428", "#5d6f86", "#7a4f6d"];   // muted, distinct inks of similar weight
+const INKS = ["#8b3a2b", "#33404f", "#6b5238", "#6e7378", "#55603f"];   // antique inks: red chalk (El Niño), iron-gall blue-black, sepia, graphite, verdigris
 const MON3 = MONTHS.map(m => m.slice(0, 3));
 const BLUE = "#2f5878", FAINT = "rgba(70,45,20,0.18)";
 function winterLab(host, SW, P, st, onPick, onChange) {
