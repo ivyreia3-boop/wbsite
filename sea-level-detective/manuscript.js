@@ -23,7 +23,7 @@ function flourish() {
   const hero = document.querySelector(".hero"); if (!hero) return;
   const svg = el("svg", { class: "flourish", viewBox: "0 0 560 420", "aria-hidden": "true" }, null);
   hero.prepend(svg);
-  const ink = "rgba(59,38,20,0.55)", red = "rgba(168,50,31,0.6)", faint = "rgba(59,38,20,0.25)";
+  const ink = "rgba(59,38,20,0.55)", red = "rgba(165,70,47,0.6)", faint = "rgba(59,38,20,0.25)";
   const paths = [];
   const add = (d, stroke, w, delay, parent = svg) => { const p = el("path", { d, stroke, "stroke-width": w, class: "draw" }, parent); p.style.setProperty("--d", delay + "s"); paths.push(p); return p; };
 
