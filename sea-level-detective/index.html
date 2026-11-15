@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sea Level Detective · Poseidon SAR</title>
+  <meta name="description" content="Is sea level really rising where you live, or is it El Niño? A trend detective built on NASA satellite altimetry.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="manuscript.css">
+  <script src="vendor/plotly.min.js" defer></script>
+  <script src="vendor/globe.gl.min.js" defer></script>
+  <script type="module" src="app.js"></script>
+  <script type="module" src="manuscript.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">NASA Space Apps 2026 · Be An Earth System Trend Detective!</p>
+    <h1>Sea Level Detective</h1>
+    <p class="team">by Team <b>Poseidon SAR</b> · Maxim Zyskin, Hanyue Shen and Ningzi Chen</p>
+    <p class="lede">Can the rest of the planet tell us what New York Harbor's water will do? We tested 29 clues from
+      around the Earth. One passed: the temperature of the tropical Pacific, 8,400 km away, tells in June how many
+      storm-surge days New York will see the following winter.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="world" aria-labelledby="world-title">
+    <h2 id="world-title">Where on Earth is New York Harbor's winter written?</h2>
+    <p>Storm surges flood New York in winter. Months earlier, the far side of the planet already holds a clue.
+      <strong>I · Find the clue</strong>: tap anywhere on Earth and see how much it knows about New York's next winter, with
+      NASA's satellite picture of the ocean underneath.
+      <strong>II · Test a winter</strong>: replay 42 winters and see which clue called them best.</p>
+    <div class="globe-card">
+      <div class="stage-head"><b>Of the Waters of New York</b><span id="hud-mode">Folio I · where the clue lies</span></div>
+      <div class="globe-stage drawer-open nota-open" id="globe-stage">
+        <div id="globe" role="img" aria-label="Rotating globe showing where on Earth data are linked to storm-surge days in New York Harbor"></div>
+        <div class="hud" aria-hidden="true">
+          <span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
+          <div class="hud-mirror">le acque lontane parlano al porto · il Pacifico sa l’inverno prima</div>
+          <div class="hud-bl" id="hud-cursor">move the pen over the Earth</div>
+        </div>
+
+        <!-- the three ways in: a rail of folio marks; each opens its own sidebar -->
+        <nav class="rail" aria-label="Ways to explore the globe">
+          <button type="button" class="rail-btn" id="tab-signal" aria-pressed="true"><span class="rail-num">I</span><span class="rail-txt">Find the clue</span></button>
+          <button type="button" class="rail-btn" id="tab-winter" aria-pressed="false"><span class="rail-num">II</span><span class="rail-txt">Test a winter</span></button>
+        </nav>
+
+        <aside class="drawer" id="drawer" aria-label="Controls">
+          <header class="drawer-head"><span id="drawer-title">Find the clue</span>
+            <button type="button" class="pop-close" id="drawer-close" aria-label="Close this panel">×</button></header>
+          <div class="drawer-body">
+
+      <div class="globe-controls" id="panel-signal">
+        <button id="globe-best" type="button" class="primary">★ Show me the best clue</button>
+        <button id="globe-next" type="button">Next clue ›</button>
+        <button id="globe-play" type="button" aria-pressed="false">▶ Play the months</button>
+        <label class="globe-month">Temperature in
+          <input type="range" id="globe-month" min="1" max="12" step="1" value="6" aria-describedby="globe-month-label">
+        </label>
+        <strong id="globe-month-label"></strong>
+        <div class="pic-row">
+          <button id="globe-pic" type="button" aria-pressed="false">Show the NASA satellite picture</button>
+          <span class="presets" id="pic-moments"></span>
+        </div>
+        <div class="nasa-legend" id="pic-legend" hidden></div>
+        <div class="globe-legend" id="legend-signal">
+          <span><i class="chip" style="background:#8e2414"></i>warmer here → more storm-surge days in New York</span>
+          <span><i class="chip" style="background:#1e3550"></i>cooler here → more storm-surge days</span>
+          <span><i class="chip line" style="background:#a8321f"></i>proven clue, months ahead</span>
+          <span><i class="chip line" style="background:#3b2614"></i>clue for the same month</span>
+          <span><i class="chip line" style="background:#8a7a63"></i>tested, no clue</span>
+        </div>
+      </div>
+
+      <!-- the former "See it from space" mode: no longer reachable from the rail; kept so its controls still initialise -->
+      <div class="globe-controls" id="panel-nasa" hidden>
+        <div class="presets" id="nasa-presets" aria-label="Jump to a moment"></div>
+        <div class="layer-buttons" id="nasa-layers" role="group" aria-label="What the satellite shows">
+          <button type="button" data-layer="sst">Sea temperature</button><button type="button" data-layer="ssh">Sea height</button><button type="button" data-layer="clouds">Clouds</button>
+        </div>
+        <button id="nasa-play" type="button" aria-pressed="false">▶ Play</button>
+        <label class="globe-month">Date
+          <input type="range" id="nasa-date" min="0" max="100" step="1" value="0" aria-describedby="nasa-date-label">
+        </label>
+        <strong id="nasa-date-label"></strong>
+        <div class="nasa-legend" id="nasa-legend"></div>
+      </div>
+
+      <div class="globe-controls" id="panel-winter" hidden>
+        <button id="winter-prev" type="button" aria-label="Previous winter">◀</button>
+        <label class="globe-month winter-range">Winter
+          <input type="range" id="winter-year" min="0" max="10" step="1" value="0" aria-describedby="winter-label">
+        </label>
+        <button id="winter-next" type="button" aria-label="Next winter">▶</button>
+        <button id="winter-play" type="button" aria-pressed="false">▶ Play</button>
+        <strong id="winter-label"></strong>
+        <div id="wl-slot" class="wl-slot"></div>
+        <span class="winter-note" id="winter-note"></span>
+      </div>
+
+          </div>
+        </aside>
+
+        <div class="nota-wrap" id="nota-wrap">
+          <button type="button" class="pop-close" id="nota-close" aria-label="Close the note">×</button>
+          <aside id="globe-info" class="globe-info" aria-live="polite"></aside>
+        </div>
+        <button type="button" class="nota-reopen" id="nota-reopen" aria-label="Show the note">§ Nota</button>
+      </div>
+
+      <!-- Test a winter: every winter at once, sliding up under the globe -->
+      <div class="winter-sheet" id="winter-sheet" hidden>
+        <div class="winter-timeline" id="winter-timeline"></div>
+      </div>
+      <div class="globe-status" id="nasa-status" aria-live="polite"></div>
+    </div>
+    <p class="caption" id="globe-caption"></p>
+
+    <details class="table-view">
+      <summary>See all 29 clues we tested</summary>
+      <div id="world-table"></div>
+    </details>
+  </section>
+
+  <!-- The evidence, laid out as a board of panels that sit side by side on wide screens:
+       row 1 cause and effect (how early the Pacific knows / what New York gets), row 2 the sea-level detective and its test,
+       row 3 the ocean mechanism and the data. -->
+  <section class="board" aria-label="The evidence">
+    <article class="panel span-6">
+      <h2 class="panel-h">How early does the Pacific know?</h2>
+      <figure class="chart-card">
+        <div class="chart-ctrl">
+          <label>Read El Niño in <input type="range" id="lead-month" min="1" max="12" step="1" value="6"></label>
+          <b id="lead-month-l">June</b>
+        </div>
+        <div class="chart-readout" id="lead-readout" aria-live="polite"></div>
+        <div id="lead-curve" class="chart short" role="img" aria-label="How early El Niño predicts the surge season, by month"></div>
+        <figcaption class="caption" id="lead-caption"></figcaption>
+      </figure>
+      <div class="tiles tiles-2" id="lead-tiles" style="margin-top:10px"></div>
+    </article>
+
+    <article class="panel span-6" id="harbor" aria-labelledby="harbor-title">
+      <h2 class="panel-h" id="harbor-title">…and New York gets more storm surges</h2>
+      <p class="panel-lede">A <strong>storm-surge day</strong>: the water left after the tide averages more than 30 cm above normal at the
+        Battery, Manhattan (Sweet &amp; Zervas 2011). Counted for every October–April since 1980.</p>
+      <div class="tiles tiles-2" id="ntr-tiles"></div>
+      <figure class="chart-card">
+        <div class="chart-ctrl">
+          <label>Strong El Niño = August at least <input type="range" id="ntr-thr" min="0.5" max="2" step="0.1" value="1.2"></label>
+          <b id="ntr-thr-l">1.2 steps</b>
+        </div>
+        <div class="chart-readout" id="ntr-readout" aria-live="polite"></div>
+        <div id="ntrchart" class="chart short" role="img" aria-label="Surge days per cool season at the Battery, strong El Niño winters highlighted"></div>
+        <figcaption id="ntr-caption" class="caption"></figcaption>
+      </figure>
+      <details class="table-view"><summary>How we tested it</summary><p class="note" id="ntr-note"></p></details>
+    </article>
+
+  <article class="panel span-8" id="explorer" aria-labelledby="explorer-title">
+    <h2 class="panel-h" id="explorer-title">Is the sea rising where you live?</h2>
+    <p class="panel-lede">Pick a place and a span of years: the detective fits a trend and says whether the rise stands out from the
+      natural ups and downs. “Remove El Niño” takes the Pacific's swings out first.</p>
+    <div class="controls" role="group" aria-label="Choose what to investigate">
+      <label>Place
+        <select id="region"></select>
+      </label>
+      <label>From
+        <select id="start"></select>
+      </label>
+      <label>To
+        <select id="end"></select>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="enso">
+        <span>Remove El Niño</span>
+      </label>
+      <label id="index-choice-wrap" hidden>Index
+        <select id="index-choice"></select>
+      </label>
+    </div>
+
+    <div class="tiles" aria-live="polite">
+      <div class="tile">
+        <div class="tile-label">Change per year</div>
+        <div class="tile-value" id="t-trend">–</div>
+        <div class="tile-sub" id="t-ci"></div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Verdict</div>
+        <div class="tile-value verdict" id="t-verdict">–</div>
+        <div class="tile-sub" id="t-p"></div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">El Niño's push</div>
+        <div class="tile-value" id="t-enso">–</div>
+        <div class="tile-sub" id="t-enso-sub">Tick “Remove El Niño” to measure it</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Years of records needed</div>
+        <div class="tile-value" id="t-years">–</div>
+        <div class="tile-sub" id="t-years-sub"></div>
+      </div>
+    </div>
+
+    <figure class="chart-card">
+      <div class="chart-ctrl" id="span-ctrl">
+        <span>Quick spans:</span>
+        <button type="button" data-span="10">last 10 years</button><button type="button" data-span="20">last 20</button>
+        <button type="button" data-span="30">last 30</button><button type="button" data-span="all">all years</button>
+        <em class="tap-hint">or drag across the chart to pick the years; double-click to see them all</em>
+      </div>
+      <div id="chart" class="chart" role="img" aria-label="Monthly sea level with fitted trend"></div>
+      <figcaption id="chart-caption" class="caption"></figcaption>
+    </figure>
+    <details class="table-view">
+      <summary>See the monthly numbers</summary>
+      <div id="table"></div>
+    </details>
+  </article>
+
+  <article class="panel span-4" aria-labelledby="sig-title">
+    <h2 class="panel-h" id="sig-title">How it avoids false alarms</h2>
+    <p class="panel-lede">Sea level remembers last month, so common tests shout “trend!” too often. On 1,000 make-believe records
+      <strong>with no trend</strong>, a fair test cries wolf 5 times in 100.</p>
+    <figure class="chart-card">
+      <div class="chart-ctrl">
+        <label>Record length <input type="range" id="e1-years" min="0" max="5" step="1" value="0"></label> <b id="e1-years-l">10 years</b>
+        <label>Real rise hidden in it <input type="range" id="e1-trend" min="0" max="4" step="1" value="0"></label> <b id="e1-trend-l">none</b>
+      </div>
+      <div id="e1chart" class="chart short" role="img" aria-label="False alarm rate by test"></div>
+      <figcaption id="e1-caption" class="caption"></figcaption>
+    </figure>
+    <p class="note">Red bar: the memory-aware fit the detective uses. Its “years of records needed” match Weatherhead et al. (1998).</p>
+  </article>
+
+  <article class="panel span-5" aria-labelledby="pacific-title">
+    <h2 class="panel-h" id="pacific-title">How El Niño moves the ocean</h2>
+    <figure class="img-card">
+      <img src="img/nasa_hovmoller_equatorial.png" alt="Equatorial sea-level anomaly, longitude against time, 2015 to 2016, from NASA-SSH: positive (red) from mid-2015 to early 2016, negative (blue) by mid-2016." loading="lazy">
+      <figcaption class="caption">Sea level along the equator, 2015–16 (NASA-SSH). Team analysis (M. Zyskin).</figcaption>
+    </figure>
+    <p class="panel-lede">When the trade winds weaken, warm water piled up in the western Pacific surges east as slow ocean waves:
+      in 2015–16 the equatorial Pacific rose about 20 cm, then fell 20 cm as La Niña followed. NASA's radar altimeters have watched
+      this since 1992. On the East Coast El Niño arrives through winter storms: New York's average sea level barely moves, while its
+      storm-surge days go up.</p>
+  </article>
+
+  <article class="panel span-7" aria-labelledby="data-title">
+    <h2 class="panel-h" id="data-title">Where the data come from, and how we tested</h2>
+    <div class="two">
+      <div>
+        <h3>Data</h3>
+        <ul id="sources" class="plain">
+          <li><strong>NASA GISTEMP v4</strong> surface temperature, including the El Niño region (Niño3.4), for the globe and the forecast.</li>
+          <li><strong>NASA POWER</strong> (MERRA-2) winds and air pressure over the New York Bight, the North Atlantic and the Arctic.</li>
+          <li><strong>NASA GIBS</strong> satellite pictures: sea temperature (GHRSST MUR), sea height (MEaSUREs) and true colour (VIIRS).</li>
+          <li><strong>NASA-SSH</strong> gridded sea-surface height (PO.DAAC, doi:10.5067/NSREF-SG0V1), 1992–present, with the NASA-SSH
+            global sea level and ENSO indicators.</li>
+          <li><strong>NOAA CO-OPS</strong> tide gauges: hourly water level and tide predictions at the Battery (8518750) for storm surges;
+            monthly sea level at the Battery, La Jolla and San Francisco and along the East Coast.</li>
+          <li><strong>NOAA CPC</strong> Oceanic Niño Index and other climate indices; <strong>USGS</strong> Hudson River flow.</li>
+        </ul>
+        <p class="note">Sea-level series are in millimetres, with the 1993–2012 average set to zero. Tide gauges measure sea level
+          against the land beside them; satellites measure it against the centre of the Earth.</p>
+      </div>
+      <div>
+        <h3>How we tested the clues</h3>
+        <p>We counted storm-surge days in each October–April season, 1980–2025, and checked 29 clues from around the world. Each clue
+          predicts a season with a model fitted on the other seasons, so no winter helps predict itself. Clues that looked useful on
+          1981–2009 then had to predict 2010–2025, winters they had never seen. El Niño, read in June, passed.</p>
+        <h3>The sea-level detective</h3>
+        <p>For the chosen place and years we fit a trend line plus the yearly cycle (and El Niño, when removed), and widen the
+          uncertainty because sea level remembers last month. A rise counts as real when its 95% range stays above zero.
+          “Years of records needed” follows Weatherhead et al. (1998).</p>
+        <h3>Use of AI</h3>
+        <p class="note">AI tools (Claude, Codex, Kimi) helped with literature search, code and drafting. Every number comes from our
+          open-source pipeline and was checked by the team.</p>
+      </div>
+    </div>
+    <p class="generated" id="generated"></p>
+  </article>
+  </section>
+</main>
+<button type="button" class="anim-master" id="anim-master" aria-pressed="true">❚❚ Pause the moving charts</button>
+<footer class="wrap foot">Sea Level Detective · Team Poseidon SAR (Maxim Zyskin, Hanyue Shen, Ningzi Chen) · NASA Space Apps Challenge 2026 · Data: NASA GISTEMP, POWER, GIBS and PO.DAAC; NOAA CO-OPS and CPC; USGS</footer>
+</body>
+</html>
