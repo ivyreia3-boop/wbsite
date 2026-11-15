@@ -273,6 +273,8 @@ async function main() {
   try { GLOBE = await (await fetch("data/globe.json")).json(); } catch { GLOBE = null; }
   // every signal x read-month x winter, leave-one-winter-out (ntr/explore_signal_winters.py), for "Test a winter"
   if (GLOBE) try { GLOBE.sw = await (await fetch("data/signal_winters.json")).json(); } catch { GLOBE.sw = null; }
+  // the altimetry clue map (ntr/explore_ssh_gibs.py): sea-surface height instead of temperature, switchable on the globe
+  if (GLOBE) try { GLOBE.ssh = await (await fetch("data/clue_map_ssh.json")).json(); } catch { GLOBE.ssh = null; }
   await waitForPlotly();
   const order = ["global", "west_pacific", "east_pacific", "california_shelf", "ny_bight", "global_nasa_gmsl_indicator",
                  "gauge_la_jolla", "gauge_san_francisco", "gauge_the_battery"];
