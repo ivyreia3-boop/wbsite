@@ -269,6 +269,8 @@ async function main() {
   if (GLOBE) try { GLOBE.sw = await (await fetch("data/signal_winters.json")).json(); } catch { GLOBE.sw = null; }
   // the altimetry clue map (ntr/explore_ssh_gibs.py): sea-surface height instead of temperature, switchable on the globe
   if (GLOBE) try { GLOBE.ssh = await (await fetch("data/clue_map_ssh.json")).json(); } catch { GLOBE.ssh = null; }
+  // East Coast tide gauges for the globe's local view: monthly sea level against normal (handoff/csv, NOAA CO-OPS)
+  if (GLOBE) try { GLOBE.local = await (await fetch("data/local_gauges.json")).json(); } catch { GLOBE.local = null; }
   await waitForPlotly();
   const order = ["global", "west_pacific", "east_pacific", "california_shelf", "ny_bight", "global_nasa_gmsl_indicator",
                  "gauge_la_jolla", "gauge_san_francisco", "gauge_the_battery"];
