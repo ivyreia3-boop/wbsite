@@ -31,13 +31,13 @@ function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN i
   }
   return lut;
 }
-const SANG = [168, 50, 31], INKB = [30, 53, 80];
+const SANG = [165,70,47], INKB = [47,88,120];
 // the colour key under the globe, in the same washes as the texture (blue ink, bare paper, red chalk)
 function scaleHtml(L) {
   if (!L.cm) return "";
   const n = v => (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v);
   return `<span class="ms-scale" role="img" aria-label="colour scale from ${n(-L.vmax)} to ${n(L.vmax)} ${L.unit}">` +
-    `<i style="background:linear-gradient(90deg,rgb(69,82,88),rgb(137,139,131),#ecdfc2,rgb(198,138,113),rgb(172,80,58))"></i>` +
+    `<i style="background:linear-gradient(90deg,rgb(82,110,123),rgb(145,158,160),#ede6d6,rgb(197,151,131),rgb(170,97,74))"></i>` +
     `<span class="ms-ticks"><b>${n(-L.vmax)}</b><b>0</b><b>${n(L.vmax)} ${L.unit}</b></span></span>`;
 }
 const day = 86400000;
@@ -53,8 +53,8 @@ function lerpColor(a, b, t) {
 }
 // Manuscript palette (Leonardo's notebooks): parchment, iron-gall ink, red chalk (sanguine).
 // Keys keep their old names: cyan = main ink, amber = sanguine (the confirmed link), warm/cool = data strokes.
-const NEON = { warm0: "#c8765a", warm1: "#8e2414", cool0: "#6f86a0", cool1: "#1e3550", cyan: "#3b2614", amber: "#a8321f",
-  ok: "#2f5a2a", grid: "rgba(70,45,20,0.16)", land: "rgba(70,45,20,0.85)", dim: "#8a7a63", paper: "#ecdfc2" };
+const NEON = { warm0: "#c48a72", warm1: "#8a3a26", cool0: "#7f97a8", cool1: "#2f5878", cyan: "#3b2614", amber: "#a5462f",
+  ok: "#2f5a2a", grid: "rgba(70,45,20,0.16)", land: "rgba(70,45,20,0.85)", dim: "#8a7a63", paper: "#ede6d6" };
 function colorFor(r, r0) {   // diverging: warm arm = positive, cool arm = negative; brighter/hotter with strength
   const t = Math.max(0, Math.min(1, (Math.abs(r) - r0) / (0.6 - r0)));
   return r > 0 ? lerpColor(NEON.warm0, NEON.warm1, t) : lerpColor(NEON.cool0, NEON.cool1, t);
@@ -270,9 +270,9 @@ function drawContours(c, vals, W, H, levels) {
 //   timeline   : surge days per winter (observed dots, trend dashed, each signal's prediction), which was closer,
 //                and the running total of days missed; a pointer marks the winter on the globe
 // Data: data/signal_winters.json (ntr/explore_signal_winters.py on the DGX).
-const INKS = ["#a8321f", "#2f5a2a", "#b0761a", "#4a6d8c", "#7a4a2a"];
+const INKS = ["#a5462f", "#3f7466", "#9a7428", "#5d6f86", "#7a4f6d"];   // muted, distinct inks of similar weight
 const MON3 = MONTHS.map(m => m.slice(0, 3));
-const BLUE = "#1e3550", FAINT = "rgba(70,45,20,0.18)";
+const BLUE = "#2f5878", FAINT = "rgba(70,45,20,0.18)";
 function winterLab(host, SW, P, st, onPick, onChange) {
   if (!host || !SW) return { render() {}, point() {} };
   const n = SW.seasons.length, VW = 1000, L0 = 190, R0 = 130, span = VW - L0 - R0;
@@ -372,7 +372,7 @@ function winterLab(host, SW, P, st, onPick, onChange) {
     let s = `<defs>${INKS.map((c, j) => `<marker id="wl-arrow${j}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}"/></marker>`).join("")}</defs>
       <text x="${L0 - 10}" y="${base - 4}" text-anchor="end" class="lab">read the clue in</text>
       <line x1="${L0}" x2="${L0 + mw * 9}" y1="${base}" y2="${base}" stroke="${FAINT}"/>
-      <rect x="${sx}" y="14" width="${sw}" height="${base - 6}" rx="3" fill="rgba(168,50,31,0.07)" stroke="rgba(168,50,31,0.45)"/>
+      <rect x="${sx}" y="14" width="${sw}" height="${base - 6}" rx="3" fill="rgba(165,70,47,0.07)" stroke="rgba(165,70,47,0.45)"/>
       <text x="${sx + sw / 2}" y="31" text-anchor="middle" class="season">stormy season · Oct → Apr</text>
       <text x="${sx + sw / 2}" y="47" text-anchor="middle" class="yr">what is predicted: its total storm-surge days</text>`;
     for (let m = 1; m <= 9; m++) {
@@ -438,14 +438,14 @@ function winterLab(host, SW, P, st, onPick, onChange) {
     const yb = top + rows * H;
     s += SW.seasons.map((yr, i) => (yr % 5 === 0 ? `<text x="${X(i)}" y="${yb + 16}" text-anchor="middle" class="tick">${yr}</text>` : "")).join("");
     s += `<g id="wl-hover" class="wl-hover" style="opacity:0"><rect x="${-span / n / 2}" y="2" width="${span / n}" height="${yb - 2}" fill="rgba(59,38,20,0.07)"/></g>`;
-    s += `<g class="wt-pointer" id="wl-ptr"><line x1="0" x2="0" y1="2" y2="${yb}" stroke="#a8321f" stroke-width="1.3"/><path d="M-5 -2 L5 -2 L0 6 Z" fill="#a8321f"/></g>`;
+    s += `<g class="wt-pointer" id="wl-ptr"><line x1="0" x2="0" y1="2" y2="${yb}" stroke="#a5462f" stroke-width="1.3"/><path d="M-5 -2 L5 -2 L0 6 Z" fill="#a5462f"/></g>`;
     time.innerHTML = s;
     time.setAttribute("aria-label", `One row per clue, winters ${SW.seasons[0]} to ${SW.seasons[n - 1]}: ${sigs.map(k => `${label(k)} read in ${MONTHS[monthOf(k) - 1]}`).join("; ")}.`);
     ptr = time.querySelector("#wl-ptr");
     tallyEl.innerHTML = "";
     keyEl.innerHTML = `<span>Each row = one clue, read in its own month.</span><span><i class="wt-line dash"></i>middle line: the simple guess</span>` +
       `<span><i class="wl-bar"></i>bars: how far each winter really landed above or below it (coloured when the clue called it better)</span>` +
-      `<span><i class="wt-line" style="background:#a8321f"></i>line: what the clue predicted</span>` +
+      `<span><i class="wt-line" style="background:#a5462f"></i>line: what the clue predicted</span>` +
       `<span class="wl-how">Hover or drag across the winters · tap a month dot to read a clue earlier or later · tap a clue's name to bring it forward</span>`;
   }
 
@@ -1049,7 +1049,7 @@ export function renderWorld(G, css, layoutBase) {
   const L = layoutBase();
   L.hovermode = "x unified"; L.yaxis.ticksuffix = ""; L.yaxis.title = { text: "× storm-surge days per El Niño step", font: { size: 12 } };
   L.xaxis.tickvals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; L.xaxis.ticktext = MONTHS.map(m => m[0]); L.xaxis.tickangle = 0; L.margin.l = 60;
-  L.legend = { ...L.legend, y: -0.18, x: 0, yanchor: "top" }; L.margin.b = 58; L.margin.t = 18;   // legend under the plot, clear of the season mark
+  L.legend = { ...L.legend, y: -0.3, x: 0, yanchor: "top" }; L.margin.b = 74; L.margin.t = 18;   // legend under the plot, clear of the season mark
   L.shapes = [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: 1, y1: 1, line: { color: css("--axis"), width: 1.5 } },
     { type: "line", yref: "paper", y0: 0, y1: 1, x0: 9.5, x1: 9.5, line: { color: css("--text-secondary"), dash: "dot", width: 1.5 } }];
   L.annotations = [{ x: 9.5, yref: "paper", y: 1, text: "season →", showarrow: false, xanchor: "left", xshift: 6,
