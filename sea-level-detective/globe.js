@@ -31,13 +31,13 @@ function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN i
   }
   return lut;
 }
-const SANG = [165,70,47], INKB = [47,88,120];
+const SANG = [139,58,43], INKB = [58,78,104];   // red chalk and iron-gall blue-black, as the clue inks
 // the colour key under the globe, in the same washes as the texture (blue ink, bare paper, red chalk)
 function scaleHtml(L) {
   if (!L.cm) return "";
   const n = v => (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v);
   return `<span class="ms-scale" role="img" aria-label="colour scale from ${n(-L.vmax)} to ${n(L.vmax)} ${L.unit}">` +
-    `<i style="background:linear-gradient(90deg,rgb(82,110,123),rgb(145,158,160),#ede6d6,rgb(197,151,131),rgb(170,97,74))"></i>` +
+    `<i style="background:linear-gradient(90deg,rgb(118,126,132),rgb(166,168,165),#ede6d6,rgb(195,161,145),rgb(167,115,98))"></i>` +
     `<span class="ms-ticks"><b>${n(-L.vmax)}</b><b>0</b><b>${n(L.vmax)} ${L.unit}</b></span></span>`;
 }
 const day = 86400000;
@@ -196,7 +196,7 @@ async function composeImagery(L, date, z, base) {
       if (t !== t) continue;
       vals[p] = t;
       const s = Math.abs(t), ink = t > 0 ? SANG : INKB, x = p % W, y = (p / W) | 0;
-      let a = 0.8 * s ** 0.75;
+      let a = 0.65 * s ** 0.75;
       if (s > 0.5 && (t > 0 ? (x + y) % 9 : (x - y + 9 * W) % 9) < 2) a = Math.min(1, a + 0.35 * (s - 0.5) / 0.5 + 0.12);   // hatching
       for (let k = 0; k < 3; k++) o[i + k] = pd[i + k] * (1 - a * (1 - ink[k] / 255));
     }
@@ -588,7 +588,7 @@ export function renderWorld(G, css, layoutBase) {
     if (bars.some(o => o.hide)) barsTimer = setTimeout(() => { if (world && state.mode === "signal") world.pointsData(world.pointsData().filter(o => !o.hide)); }, TWEEN_MS + 120);
     const arcs = local ? [] : m === "signal" ? [...staticArcs, ...state.clicks] : m === "winter" ? sigArcs() : state.clicks;
     world.arcsData(withGlow(arcs));
-    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? -0.4 : 0), lng: t.lng + (t.battery ? 6.5 : 1.1), alt: t.alt + 0.02,
+    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? (m === "winter" ? -0.4 : 1.6) : 0), lng: t.lng + (t.battery ? (m === "winter" ? 6.5 : -5) : 1.1), alt: t.alt + 0.02,   // label on the side away from the open sidebar
       text: t.battery ? `The Battery ${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))} mm`
         : `${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))}`, size: t.battery ? 0.9 : 0.55, color: t.battery ? NEON.cyan : t.color }));
     const labels = local ? gaugeLabels : [m === "winter" ? { ...nyLabel, lat: 45, lng: -80, alt: 0.02 } : nyLabel, ...(m === "signal" ? sourceLabels : m === "winter" ? sigLabels() : []),
@@ -953,7 +953,7 @@ export function renderWorld(G, css, layoutBase) {
       const d = `${w.year}-${String(m0).padStart(2, "0")}-15`;
       const sshOK = d >= LAYERS.ssh.start && d <= LAYERS.ssh.end, sstOK = d >= LAYERS.sst.start;
       const key = state.src === "ssh" ? (sshOK ? "ssh" : sstOK ? "sst" : null) : (sstOK ? "sst" : sshOK ? "ssh" : null);   // follows the switch where both exist
-      if (state.src === "local") { state.token++; setTexture(null); }   // local view: bare map under the tide gauges
+      if (state.src === "local") { state.token++; setTexture(null); $("nasa-status").textContent = ""; }   // local view: bare map under the tide gauges
       else if (key) { state.layer = key; showImagery(key, d, !(state.playing || state.autoStep)); }   // no sharp re-load while playing: lighter
       else { state.token++; setTexture(null); $("nasa-status").textContent = `NASA satellite pictures begin in late 1992; the globe shows the base map for ${mon} ${w.year}.`; }
       $("winter-note").innerHTML = state.src === "local" ? `Globe: NOAA tide gauges, average sea level over winter ${w.year}–${String(w.year + 1).slice(2)}.` : key ? `Globe: NASA ${key === "sst" ? "sea temperature" : "sea height"} on 15 ${mon} ${w.year}, when ${lab.label(sigs[0] || "nino34_giss")} was read. ` + scaleHtml(LAYERS[key]) : `Satellite pictures begin in late 1992.`;
@@ -1034,17 +1034,19 @@ export function renderWorld(G, css, layoutBase) {
   // temperature = the clue bars (picture only on request), local = bare map under the tide gauges
   function applySignalSurface() {
     if (state.src === "ssh") showPic({ layer: "ssh", date: picDate(state.month, "ssh"), auto: true });
-    else if (state.src === "local") { state.pic = null; state.token++; setTexture(null); refresh(); }
+    else if (state.src === "local") showPic(null);
     else if (state.pic && state.pic.auto && state.pic.layer === "ssh") showPic(null);
     else refresh();
   }
   function setSrc(src) {
     if (src === "ssh" && !SSHM) return;
     const was = state.src; state.src = src;
+    document.querySelector(".pic-row").hidden = src === "local";   // no satellite picture under the tide gauges
     if (state.mode === "signal") applySignalSurface();
     if (state.mode === "winter") setWinter(state.winter);
     if (src === "local") fly(36, -72, 0.8);
     else if (was === "local") state.mode === "winter" ? fly(27, -84, 1.7) : fly(18, -108, 2.2);
+    $("legend-signal").hidden = src === "local" || !!state.pic;   // the clue legend means nothing under the tide gauges
     updateKey();
   }
   $("gk-switch").addEventListener("click", e => { const b = e.target.closest("button[data-src]"); if (b) setSrc(b.dataset.src); });
