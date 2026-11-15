@@ -87,23 +87,23 @@ function update() {
   }
   const sig = fit.ci[0] > 0 || fit.ci[1] < 0;
   $("t-trend").textContent = `${fmt(fit.trend)} mm/yr`;
-  $("t-ci").textContent = `likely between ${fit.ci[0].toFixed(1)} and ${fit.ci[1].toFixed(1)} mm a year (95%)`;
+  $("t-ci").textContent = `likely ${fit.ci[0].toFixed(1)} to ${fit.ci[1].toFixed(1)}`;
   const v = $("t-verdict");
   v.className = "tile-value verdict" + (sig ? " yes" : "");
   const word = fit.trend > 0 ? "Rising" : "Falling";
   v.innerHTML = sig ? `<span class="icon" aria-hidden="true">✔</span>${word}, and it stands out`
-                    : `<span class="icon" aria-hidden="true">≈</span>Within the natural ups and downs`;
-  $("t-p").textContent = `${fit.n} months of records, ${fit.start} to ${fit.end} (p ${fit.p < 0.001 ? "< 0.001" : "= " + fit.p.toFixed(3)})`;
+                    : `<span class="icon" aria-hidden="true">≈</span>No clear trend`;
+  $("t-p").textContent = `${fit.start.slice(0, 4)}–${fit.end.slice(0, 4)}`;
   if (removeEnso) {
     const unit = index.key === "noaa_oni" ? "mm per °C" : "mm per index unit";
     $("t-enso").textContent = `${fmt(fit.indexCoef)} ${unit}`;
-    $("t-enso-sub").textContent = `${index.label}; likely between ${fit.indexCI[0].toFixed(1)} and ${fit.indexCI[1].toFixed(1)}`;
+    $("t-enso-sub").textContent = `likely ${fit.indexCI[0].toFixed(1)} to ${fit.indexCI[1].toFixed(1)}`;
   } else {
-    $("t-enso").textContent = "–"; $("t-enso-sub").textContent = "Tick “Remove El Niño” to measure it";
+    $("t-enso").textContent = "–"; $("t-enso-sub").textContent = "tick “Remove El Niño”";
   }
   const need = yearsToDetect(fit.resSD, fit.rho, Math.max(Math.abs(fit.trend), 0.5));
   $("t-years").textContent = Number.isFinite(need) ? `≈ ${Math.round(need)} years` : "–";
-  $("t-years-sub").textContent = `for a ${Math.abs(fit.trend).toFixed(1)} mm/yr change to stand out here (Weatherhead 1998)`;
+  $("t-years-sub").textContent = `for this rise to stand out`;
 
   const s1 = css("--series-1"), s2 = css("--series-2"), ink = css("--text-secondary");
   const x = fit.dates.map(d => `${d}-15`);
@@ -127,8 +127,7 @@ function update() {
   layout.dragmode = "zoom"; layout.yaxis.fixedrange = true;   // dragging across the chart picks a span of years (see bindSpan)
   if (fixedX) { layout.xaxis.range = fixedX; layout.xaxis.autorange = false; }   // while the record grows on its own, keep the axis still
   Plotly.react("chart", traces, layout, { displayModeBar: false, responsive: true, doubleClick: false });
-  $("chart-caption").textContent = `${s.label}, monthly sea level in mm (1993–2012 average = 0) with the yearly cycle taken out. Source: ${s.source}.` +
-    (removeEnso ? ` Red-chalk line: the same with El Niño's part taken out (${index.label}).` : "");
+  $("chart-caption").textContent = `${s.label} · ${s.source} · mm, yearly cycle removed` + (removeEnso ? " · red: El Niño removed" : "");
   renderTable(fit, removeEnso);
 }
 
@@ -189,10 +188,7 @@ function renderE1() {
     hovertemplate: T ? "%{x}: finds the rise in %{y:.0f}% of records<extra></extra>" : "%{x}: %{y:.1f}% false alarms<extra></extra>",
   }], layout, { displayModeBar: false, responsive: true });
   const n = DATA.e1.noise;
-  $("e1-caption").textContent = (T ? `How often each test finds a real rise of ${T} mm a year in ${W}-year records. The tests that score higher here are the ` +
-    `same ones that cry wolf when there is no rise (set the rise to “none”); the memory-aware fit only speaks up when the evidence holds. ` :
-    `False alarms: how often each test finds a trend in ${W}-year records that have none. `) +
-    `1,000 make-believe records with the memory (${n.phi.toFixed(2)}) and month-to-month noise (${n.sigma_mm.toFixed(0)} mm) of three real tide gauges. Thin bars: 95% range.`;
+  $("e1-caption").textContent = T ? `How often each test finds a real ${T} mm/yr rise in ${W} years. Tests that score high here also cry wolf at “none”.` : `False alarms in ${W}-year records with no trend; fair = 5 in 100.`;
 }
 
 let NTR = null;
@@ -206,20 +202,20 @@ function renderNTR() {
   const avg = valid.reduce((s, v) => s + v.surge_days, 0) / valid.length;
   const q = o.outlook;
   $("ntr-tiles").innerHTML = `
-    <div class="tile"><div class="tile-label">Extra storm-surge days for each step of El Niño</div>
+    <div class="tile"><div class="tile-label">Per step of El Niño</div>
       <div class="tile-value">+${pct(all.rate_ratio_per_sd)}</div>
-      <div class="tile-sub">likely +${pct(all.ci95[0])} to +${pct(all.ci95[1])}; El Niño read in August; ${all.n} winters</div></div>
+      <div class="tile-sub">likely +${pct(all.ci95[0])} to +${pct(all.ci95[1])}</div></div>
     <div class="tile"><div class="tile-label">Strong El Niño winters</div>
       <div class="tile-value">${strongMean.toFixed(0)} days</div>
-      <div class="tile-sub">against ${avg.toFixed(0)} in an average winter (${Object.keys(o.strong_el_nino_seasons).map(y => `${y}/${String(+y + 1).slice(2)}`).join(", ")})</div></div>`;
+      <div class="tile-sub">vs ${avg.toFixed(0)} in an average winter</div></div>`;
   // the two forecast tiles sit under the lead-time chart, beside which they belong
   const forecastTiles = `
     <div class="tile"><div class="tile-label">Forecast test on 2012–2025</div>
       <div class="tile-value">+${Math.round(o.test_deviance_skill_vs_trend_only * 100)}%</div>
-      <div class="tile-sub">better than the simple guess, predicting each winter from August</div></div>
+      <div class="tile-sub">better than the simple guess</div></div>
     <div class="tile"><div class="tile-label">Winter 2026–27</div>
       <div class="tile-value verdict"><span class="icon" aria-hidden="true">▲</span>Above normal</div>
-      <div class="tile-sub">August El Niño at ${q.enso_aug_sd.toFixed(1)} steps${q.extrapolation ? ", the strongest August since 1980" : ""}</div></div>`;
+      <div class="tile-sub">August El Niño ${q.enso_aug_sd.toFixed(1)} steps</div></div>`;
   if ($("lead-tiles")) $("lead-tiles").innerHTML = forecastTiles; else $("ntr-tiles").insertAdjacentHTML("beforeend", forecastTiles);
   const s2 = css("--series-2"), gray = css("--axis");
   const thr = Number($("ntr-thr").value);   // slider: how strong an August El Niño must be to count
@@ -228,7 +224,7 @@ function renderNTR() {
   const strongW = valid.filter(isStrong), otherW = valid.filter(s => !isStrong(s));
   const mean = a => a.reduce((t, s) => t + s.surge_days, 0) / Math.max(1, a.length);
   $("ntr-readout").innerHTML = strongW.length
-    ? `<b>${strongW.length}</b> winter${strongW.length > 1 ? "s" : ""} pass: they averaged <b>${mean(strongW).toFixed(0)} storm-surge days</b>; the other ${otherW.length} averaged ${mean(otherW).toFixed(0)}.`
+    ? `<b>${strongW.length}</b> strong winter${strongW.length > 1 ? "s" : ""}: <b>${mean(strongW).toFixed(0)} days</b> vs ${mean(otherW).toFixed(0)} in the rest.`
     : `No winter since 1980 had an August El Niño that strong.`;
   const label = s => `${s.start_year}/${String(s.start_year + 1).slice(2)}`;
   const mk = (filter, name, color) => ({
@@ -253,9 +249,7 @@ function renderNTR() {
     text: `strong El Niño average ${mean(strongW).toFixed(0)}`, font: { color: s2, size: 12 } });
   Plotly.react("ntrchart", [mk(s => !isStrong(s), "Other winters", gray), mk(isStrong, "Strong El Niño winters", s2)],
     layout, { displayModeBar: false, responsive: true });
-  $("ntr-caption").textContent = `Storm-surge days per October–April season at the Battery (NOAA tide gauge 8518750): days when the water ` +
-    `left after the tide averages more than ${NTR.threshold_m * 100} cm above its yearly level. Seasons with records for at least 6 months are shown (1997/98 has fewer). ` +
-    `Strong El Niño: August index at 1.2 steps or more (${NTR.sources.enso.replace(" (fallback)", "")}). One step = a typical year-to-year swing.`;
+  $("ntr-caption").textContent = `Oct–Apr seasons at the Battery (NOAA 8518750); 1997/98 has too little data. One step = a typical year-to-year swing.`;
   const m = NTR.models, conc = m["all concurrent (best lag 0-6)"], lead = m["all leading (lag 1-6, forecast)"], wind = m["wind (best lag)"];
   $("ntr-note").textContent = `How we tested it: the model learned from the winters of 1980–2011 and then predicted 2012–2025, reading El Niño ` +
     `in August, two months before each season starts. Leaving out any one winter keeps the effect between +${pct(all.leave_one_out_rr_range[0])} ` +
