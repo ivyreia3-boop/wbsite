@@ -588,7 +588,7 @@ export function renderWorld(G, css, layoutBase) {
     if (bars.some(o => o.hide)) barsTimer = setTimeout(() => { if (world && state.mode === "signal") world.pointsData(world.pointsData().filter(o => !o.hide)); }, TWEEN_MS + 120);
     const arcs = local ? [] : m === "signal" ? [...staticArcs, ...state.clicks] : m === "winter" ? sigArcs() : state.clicks;
     world.arcsData(withGlow(arcs));
-    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? -0.4 : 0), lng: t.lng + (t.battery ? 6.5 : 1.1), alt: t.alt + 0.02,
+    const gaugeLabels = tw.filter(t => t.a !== null).map(t => ({ lat: t.lat + (t.battery ? (m === "winter" ? -0.4 : 1.6) : 0), lng: t.lng + (t.battery ? (m === "winter" ? 6.5 : -5) : 1.1), alt: t.alt + 0.02,   // label on the side away from the open sidebar
       text: t.battery ? `The Battery ${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))} mm`
         : `${t.a >= 0 ? "+" : "−"}${Math.abs(Math.round(t.a))}`, size: t.battery ? 0.9 : 0.55, color: t.battery ? NEON.cyan : t.color }));
     const labels = local ? gaugeLabels : [m === "winter" ? { ...nyLabel, lat: 45, lng: -80, alt: 0.02 } : nyLabel, ...(m === "signal" ? sourceLabels : m === "winter" ? sigLabels() : []),
@@ -953,7 +953,7 @@ export function renderWorld(G, css, layoutBase) {
       const d = `${w.year}-${String(m0).padStart(2, "0")}-15`;
       const sshOK = d >= LAYERS.ssh.start && d <= LAYERS.ssh.end, sstOK = d >= LAYERS.sst.start;
       const key = state.src === "ssh" ? (sshOK ? "ssh" : sstOK ? "sst" : null) : (sstOK ? "sst" : sshOK ? "ssh" : null);   // follows the switch where both exist
-      if (state.src === "local") { state.token++; setTexture(null); }   // local view: bare map under the tide gauges
+      if (state.src === "local") { state.token++; setTexture(null); $("nasa-status").textContent = ""; }   // local view: bare map under the tide gauges
       else if (key) { state.layer = key; showImagery(key, d, !(state.playing || state.autoStep)); }   // no sharp re-load while playing: lighter
       else { state.token++; setTexture(null); $("nasa-status").textContent = `NASA satellite pictures begin in late 1992; the globe shows the base map for ${mon} ${w.year}.`; }
       $("winter-note").innerHTML = state.src === "local" ? `Globe: NOAA tide gauges, average sea level over winter ${w.year}–${String(w.year + 1).slice(2)}.` : key ? `Globe: NASA ${key === "sst" ? "sea temperature" : "sea height"} on 15 ${mon} ${w.year}, when ${lab.label(sigs[0] || "nino34_giss")} was read. ` + scaleHtml(LAYERS[key]) : `Satellite pictures begin in late 1992.`;
@@ -1034,17 +1034,19 @@ export function renderWorld(G, css, layoutBase) {
   // temperature = the clue bars (picture only on request), local = bare map under the tide gauges
   function applySignalSurface() {
     if (state.src === "ssh") showPic({ layer: "ssh", date: picDate(state.month, "ssh"), auto: true });
-    else if (state.src === "local") { state.pic = null; state.token++; setTexture(null); refresh(); }
+    else if (state.src === "local") showPic(null);
     else if (state.pic && state.pic.auto && state.pic.layer === "ssh") showPic(null);
     else refresh();
   }
   function setSrc(src) {
     if (src === "ssh" && !SSHM) return;
     const was = state.src; state.src = src;
+    document.querySelector(".pic-row").hidden = src === "local";   // no satellite picture under the tide gauges
     if (state.mode === "signal") applySignalSurface();
     if (state.mode === "winter") setWinter(state.winter);
     if (src === "local") fly(36, -72, 0.8);
     else if (was === "local") state.mode === "winter" ? fly(27, -84, 1.7) : fly(18, -108, 2.2);
+    $("legend-signal").hidden = src === "local" || !!state.pic;   // the clue legend means nothing under the tide gauges
     updateKey();
   }
   $("gk-switch").addEventListener("click", e => { const b = e.target.closest("button[data-src]"); if (b) setSrc(b.dataset.src); });
