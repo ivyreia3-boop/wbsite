@@ -539,3 +539,9 @@ html.landing-on, html.landing-on body { overflow: hidden; }
 .phys-more[open] > summary::after { transform: rotate(180deg); }
 .phys-more > summary:hover, .phys-more > summary:focus-visible { background: var(--sanguine); border-color: var(--sanguine); outline: none; }
 .phys-more[open] > summary { margin-bottom: 12px; }
+/* physics panel v2: four tiles in one row; transparent plots on equal heights */
+.panel .tiles.phys-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.phys-grid img { background: transparent; border: 0; border-radius: 0; }
+.phys-grid figure { justify-content: flex-start; }
+@media (max-width: 820px) { .panel .tiles.phys-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 821px) { .phys-grid { grid-template-columns: 1.66fr 1.436fr 2.024fr; } }
