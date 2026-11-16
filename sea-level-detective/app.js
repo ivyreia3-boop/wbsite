@@ -1,7 +1,7 @@
 // Sea Level Detective: page logic. Statistics live in stats.js (tested against the Python pipeline).
-import { fitWindow, yearsToDetect } from "./stats.js";
-import { renderWorld } from "./globe.js";
-import { COAST, coastConfig, setCoast, speakCoast, coastSwitch } from "./coast.js";
+import { fitWindow, yearsToDetect } from "./stats.js?v=20261115c";
+import { renderWorld } from "./globe.js?v=20261115c";
+import { COAST, coastConfig, setCoast, speakCoast, coastSwitch } from "./coast.js?v=20261115c";
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
