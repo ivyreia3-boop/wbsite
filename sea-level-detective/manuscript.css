@@ -522,3 +522,20 @@ html.landing-on, html.landing-on body { overflow: hidden; }
   .l-sketch path { stroke-dashoffset: 0; animation: none; } .l-sketch .dot, .l-eyebrow, .landing h1, .l-sub, #landing-go { opacity: 1; animation: none; }
   .landing.rolling, .landing-roller.rolling { animation-duration: .01s; }
 }
+/* The physics panel (M. Zyskin): plots on white, a row of five numbers */
+.phys-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 6px 0 14px; }
+.phys-grid figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.phys-grid img { width: 100%; height: auto; display: block; background: #fff; border: 1px solid rgba(59,38,20,.18); border-radius: 3px; }
+.phys-grid figcaption { font-size: .92rem; line-height: 1.4; color: var(--ink-soft); font-style: italic; }
+.phys-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 820px) { .phys-grid { grid-template-columns: 1fr; } .phys-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* compact physics panel: numbers up front, plots one click away */
+.phys-tiles { margin-bottom: 10px; }
+.phys-tiles .tile-value { font-size: 1.35rem; }
+.phys-more > summary { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; font-style: italic;
+  padding: 7px 18px; border-radius: 999px; background: var(--ink); color: #f6efe0; border: 1px solid var(--ink); }
+.phys-more > summary::-webkit-details-marker { display: none; }
+.phys-more > summary::after { content: "▾"; transition: transform .2s; }
+.phys-more[open] > summary::after { transform: rotate(180deg); }
+.phys-more > summary:hover, .phys-more > summary:focus-visible { background: var(--sanguine); border-color: var(--sanguine); outline: none; }
+.phys-more[open] > summary { margin-bottom: 12px; }

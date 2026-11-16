@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sea Level Detective · Poseidon SAR</title>
   <meta name="description" content="Is sea level really rising where you live, or is it El Niño? A trend detective built on NASA satellite altimetry.">
-  <link rel="stylesheet" href="style.css?v=20261115g">
-  <link rel="stylesheet" href="manuscript.css?v=20261115g">
+  <link rel="stylesheet" href="style.css?v=20261115h">
+  <link rel="stylesheet" href="manuscript.css?v=20261115h">
   <script src="vendor/plotly.min.js" defer></script>
   <script src="vendor/globe.gl.min.js" defer></script>
-  <script type="module" src="app.js?v=20261115g"></script>
-  <script type="module" src="manuscript.js?v=20261115g"></script>
+  <script type="module" src="app.js?v=20261115h"></script>
+  <script type="module" src="manuscript.js?v=20261115h"></script>
   <noscript><style>.landing, .landing-roller { display: none !important; }</style></noscript>
 </head>
 <body>
@@ -196,6 +196,31 @@
       </figure>
       <details class="table-view"><summary>How we tested it</summary><p class="note" id="ntr-note"></p></details>
     </article>
+
+  <article class="panel span-12" id="physics-panel" aria-labelledby="physics-title">
+    <h2 class="panel-h" id="physics-title">The physics: a 14-day Pacific forecast</h2>
+    <p class="panel-lede">Equatorial waves carry El Niño’s signal; a shallow-water model on NASA sea height and OSCAR currents forecasts the next two weeks. Team analysis: Maxim Zyskin.</p>
+    <div class="tiles phys-tiles">
+      <div class="tile"><div class="tile-label">Kelvin-like, eastward</div><div class="tile-value">+1.50–1.62 m/s</div><div class="tile-sub">2015–16 El Niño</div></div>
+      <div class="tile"><div class="tile-label">Rossby-like, westward</div><div class="tile-value">−0.68–0.78 m/s</div><div class="tile-sub">2026 check</div></div>
+      <div class="tile"><div class="tile-label">14-day sea-height error</div><div class="tile-value">−12.3%</div><div class="tile-sub">vs persistence (95% CI 10.3–14.3%)</div></div>
+      <div class="tile"><div class="tile-label">Forecasts that beat persistence</div><div class="tile-value">168 / 182</div><div class="tile-sub">92%, rolling 2023–2026</div></div>
+      <div class="tile"><div class="tile-label">14-day surface currents</div><div class="tile-value">+9.4%</div><div class="tile-sub">skill vs persistence</div></div>
+    </div>
+    <details class="phys-more">
+      <summary>Open the physics: plots and method</summary>
+    <div class="phys-grid">
+      <figure><img src="img/zy_rossby_hovmoller.png" alt="Hovmöller diagram of the symmetric off-equatorial sea-height residual, 3° to 8° north and south, January to November 2026: bands slope westward over time at the first-Rossby speed." loading="lazy">
+        <figcaption>Westward-sloping sea-height bands follow the first-Rossby speed (2026).</figcaption></figure>
+      <figure><img src="img/zy_komega.png" alt="Wavenumber–frequency power spectrum of the same residual: power concentrated near the n = 1 equatorial Rossby dispersion curve." loading="lazy">
+        <figcaption>Wavenumber–frequency power sits on the n = 1 Rossby branch.</figcaption></figure>
+      <figure><img src="img/zy_ssh_oscar.png" alt="Map of NASA sea-surface height anomaly over the tropical Pacific with OSCAR total surface-current arrows, late October 2026: high sea along the equator." loading="lazy">
+        <figcaption>NASA sea height with OSCAR surface currents, the model’s starting state.</figcaption></figure>
+    </div>
+    <p class="note">Data: NASA-SSH sea height (0.5° weekly) and NASA SSH V1.1 with OSCAR V2 currents, 201 weekly states 2023–2026, 170°W–100°W, 10°S–10°N.
+      The model forecasts only the dynamical change on top of today’s ocean; coefficients are fit on earlier windows only, with no future wind forcing.</p>
+    </details>
+  </article>
 
   <article class="panel span-12" id="tells-panel" aria-labelledby="tells-title">
     <h2 class="panel-h" id="tells-title">What it tells us</h2>
