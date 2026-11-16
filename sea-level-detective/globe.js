@@ -19,7 +19,7 @@ const LAYERS = {
 };
 // NASA's own colour scales for the two anomaly layers (from gibs.earthdata.nasa.gov/colormaps/v1.3/*.xml): [r, g, b, value].
 // Used to turn each imagery pixel back into its value, which is then redrawn in the manuscript palette.
-import { COAST } from "./coast.js?v=20261115d";
+import { COAST } from "./coast.js?v=20261115e";
 const CMAPS = fetch("data/gibs_colormaps.json").then(r => r.json()).catch(() => null);
 const LUTS = {};
 function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN if no colour on NASA's scale is close)
