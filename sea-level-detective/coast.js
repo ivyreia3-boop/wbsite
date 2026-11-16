@@ -1,6 +1,6 @@
-// East / West: which coast the globe and the panels after it tell the story for. The page loads one coast at a time
-// (?coast=west), so every chart and the globe are built once for that coast's data; the switch slides the stage and the
-// panels out, loads the other coast and slides them back in.
+// East / West: which coast the globe and the panels after it tell the story for (?coast=west on load). Switching happens
+// on the same page: app.js turns the globe across, rebuilds the globe section and the coast's panels from pristine copies
+// with the other coast's data, and fades them back in.
 
 const param = new URLSearchParams(location.search).get("coast");
 const id = param === "west" ? "west" : "east";
@@ -44,21 +44,15 @@ const COASTS = {
   },
 };
 
-export const COAST = COASTS[id];
-
-// arriving from the other coast: hold the stage and panels off to the side (CSS) until the page is built
-let ARRIVE = null;
-try { ARRIVE = JSON.parse(sessionStorage.getItem("sld-coast-slide")); sessionStorage.removeItem("sld-coast-slide"); } catch {}
-if (ARRIVE) {
-  const root = document.documentElement;
-  root.dataset.coastFrom = ARRIVE.dir === 1 ? "east" : "west";
-  root.style.setProperty("--cs-from", -ARRIVE.dir);
-  root.classList.add("cs-arriving");
-  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-}
+export let COAST = COASTS[id];
+export const coastConfig = c => COASTS[c];
+export function setCoast(c) { COAST = COASTS[c]; }
 
 // swap the names in every text node under the given roots, now and whenever the page writes new text there
+let watchers = [];
 export function speakCoast(roots) {
+  for (const w of watchers) w.disconnect();
+  watchers = [];
   if (!COAST.words) return;
   const fix = node => {
     if (node.parentElement && node.parentElement.closest(".coast-switch")) return;   // the switch names both coasts
@@ -68,6 +62,7 @@ export function speakCoast(roots) {
   };
   const walk = root => {
     if (root.nodeType === 3) { fix(root); return; }
+    if (root.nodeType !== 1) return;
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let n = w.nextNode(); n; n = w.nextNode()) fix(n);
   };
@@ -79,37 +74,28 @@ export function speakCoast(roots) {
       for (const [re, to] of COAST.words) u = u.replace(re, to);
       if (u !== v) a.setAttribute("aria-label", u);
     }
-    new MutationObserver(ms => {
+    const mo = new MutationObserver(ms => {
       for (const m of ms) {
         if (m.type === "characterData") fix(m.target);
         else for (const n of m.addedNodes) walk(n);
       }
-    }).observe(r, { childList: true, characterData: true, subtree: true });
+    });
+    mo.observe(r, { childList: true, characterData: true, subtree: true });
+    watchers.push(mo);
   }
   for (const [sel, txt] of Object.entries(COAST.texts || {})) { const e = document.querySelector(sel); if (e) e.textContent = txt; }
 }
 
-// the East / West switch: slide out, load the other coast, slide in (keeping the reader's place on the page)
-export function coastSwitch(host, slideEls) {
+// the East / West buttons in the globe's title strip
+export function coastSwitch(host, onPick) {
+  if (!host) return;
   host.innerHTML = `<span class="cs-lab">Coast</span>` +
     `<button type="button" data-coast="east" aria-pressed="${COAST.id === "east"}">East · New York</button>` +
     `<button type="button" data-coast="west" aria-pressed="${COAST.id === "west"}">West · Los Angeles</button>`;
   host.addEventListener("click", e => {
     const b = e.target.closest("button[data-coast]");
     if (!b || b.dataset.coast === COAST.id) return;
-    const to = b.dataset.coast, dir = to === "west" ? 1 : -1;   // going west, the page pans to the left: content moves right
-    try { sessionStorage.setItem("sld-coast-slide", JSON.stringify({ y: scrollY, dir })); } catch {}
     host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-    for (const el of slideEls) { el.style.setProperty("--cs-dir", dir); el.classList.add("cs-leave"); }
-    const url = new URL(location.href);
-    if (to === "west") url.searchParams.set("coast", "west"); else url.searchParams.delete("coast");
-    setTimeout(() => location.assign(url), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 420);
+    onPick(b.dataset.coast);
   });
-  // arriving: back to the same place on the page, then slide in from the side we came from
-  if (ARRIVE) {
-    scrollTo(0, ARRIVE.y);
-    void document.body.offsetWidth;   // lay out the held-off position first, so removing it slides
-    setTimeout(() => { scrollTo(0, ARRIVE.y); document.documentElement.classList.remove("cs-arriving"); }, 60);
-  }
-  return ARRIVE;
 }
