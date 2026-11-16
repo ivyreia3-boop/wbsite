@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sea Level Detective in one minute · Poseidon SAR</title>
+  <meta name="description" content="A one-minute video introduction to Sea Level Detective by Team Poseidon SAR, NASA Space Apps 2026.">
+  <style>
+    @font-face { font-family: "IM Fell English"; src: url("vendor/fonts/im-fell-english-400-normal.woff2") format("woff2"); font-style: normal; font-display: swap; }
+    @font-face { font-family: "IM Fell English"; src: url("vendor/fonts/im-fell-english-400-italic.woff2") format("woff2"); font-style: italic; font-display: swap; }
+    :root { --ink: #27211b; --ink-soft: #6b5a43; --red: #8b3a2b; --paper: #f1ece1; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { min-height: 100vh; color: var(--ink); font-family: "IM Fell English", Georgia, serif;
+      background: radial-gradient(ellipse at 50% 30%, rgba(255,250,236,.9), rgba(236,227,207,0) 70%), #ece3cf;
+      box-shadow: inset 0 0 140px rgba(96,64,28,.25); display: flex; flex-direction: column; align-items: center; }
+    main { width: min(1040px, 100% - 32px); padding: 40px 0 56px; display: flex; flex-direction: column; gap: 18px; }
+    .eyebrow { margin: 0; font-style: italic; color: var(--red); font-size: 1.05rem; }
+    h1 { margin: 0; font-weight: 400; font-size: clamp(2rem, 4.6vw, 3.4rem); line-height: 1.08; text-wrap: balance; }
+    .team { margin: 0; color: var(--ink-soft); font-style: italic; font-size: 1.1rem; }
+    .frame { padding: 10px; background: #f6f0e3; border: 1px solid rgba(59,38,20,.3); border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(59,38,20,.18); }
+    video { display: block; width: 100%; height: auto; border-radius: 3px; background: #27211b; }
+    .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+    .links a { font-style: italic; font-size: 1.15rem; padding: 8px 22px; border-radius: 999px; text-decoration: none;
+      border: 1px solid var(--ink); color: var(--ink); transition: background .2s, color .2s; }
+    .links a.primary { background: var(--ink); color: #f6efe0; }
+    .links a:hover, .links a:focus-visible { background: var(--red); border-color: var(--red); color: #f6efe0; outline: none; }
+    .note { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NASA Space Apps 2026 · Team Poseidon SAR</p>
+    <h1>Sea Level Detective in one minute</h1>
+    <p class="team">Maxim Zyskin, Hanyue Shen and Ningzi Chen</p>
+    <div class="frame">
+      <video controls playsinline preload="metadata" src="media/one_minute_video.mp4">
+        Your browser can’t play this video here. <a href="media/one_minute_video.mp4">Download it (MP4)</a>.
+      </video>
+    </div>
+    <div class="links">
+      <a class="primary" href="./">Explore the globe →</a>
+      <a href="../">← Poseidon SAR home</a>
+    </div>
+    <p class="note">Data: NASA altimetry (MEaSUREs), GISTEMP, POWER and GIBS · NOAA tide gauges and climate indices.</p>
+  </main>
+</body>
+</html>
