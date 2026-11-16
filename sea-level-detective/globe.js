@@ -19,7 +19,7 @@ const LAYERS = {
 };
 // NASA's own colour scales for the two anomaly layers (from gibs.earthdata.nasa.gov/colormaps/v1.3/*.xml): [r, g, b, value].
 // Used to turn each imagery pixel back into its value, which is then redrawn in the manuscript palette.
-import { COAST } from "./coast.js?v=20261115f";
+import { COAST } from "./coast.js?v=20261115g";
 const CMAPS = fetch("data/gibs_colormaps.json").then(r => r.json()).catch(() => null);
 const LUTS = {};
 function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN if no colour on NASA's scale is close)
@@ -55,7 +55,7 @@ function lerpColor(a, b, t) {
 // Manuscript palette (Leonardo's notebooks): parchment, iron-gall ink, red chalk (sanguine).
 // Keys keep their old names: cyan = main ink, amber = sanguine (the confirmed link), warm/cool = data strokes.
 const NEON = { warm0: "#c09584", warm1: "#8b3a2b", cool0: "#8c98a6", cool1: "#3a4e68",   // data inks = the picture's (SANG, INKB)
-  cyan: "#3b2614", amber: "#a5462f",
+  cyan: "#3b2614", amber: "#8b3a2b",
   ok: "#2f5a2a", grid: "rgba(70,45,20,0.16)", land: "rgba(70,45,20,0.85)", dim: "#8a7a63", paper: "#ede6d6" };
 function colorFor(r, r0) {   // diverging: warm arm = positive, cool arm = negative; brighter/hotter with strength
   const t = Math.max(0, Math.min(1, (Math.abs(r) - r0) / (0.6 - r0)));
@@ -373,7 +373,7 @@ function winterLab(host, SW, P, st, onPick, onChange) {
     let s = `<defs>${INKS.map((c, j) => `<marker id="wl-arrow${j}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}"/></marker>`).join("")}</defs>
       <text x="${L0 - 10}" y="${base - 4}" text-anchor="end" class="lab">read the clue in</text>
       <line x1="${L0}" x2="${L0 + mw * 9}" y1="${base}" y2="${base}" stroke="${FAINT}"/>
-      <rect x="${sx}" y="14" width="${sw}" height="${base - 6}" rx="3" fill="rgba(165,70,47,0.07)" stroke="rgba(165,70,47,0.45)"/>
+      <rect x="${sx}" y="14" width="${sw}" height="${base - 6}" rx="3" fill="rgba(139,58,43,0.07)" stroke="rgba(139,58,43,0.45)"/>
       <text x="${sx + sw / 2}" y="31" text-anchor="middle" class="season">stormy season · Oct → Apr</text>
       <text x="${sx + sw / 2}" y="47" text-anchor="middle" class="yr">what is predicted: its total storm-surge days</text>`;
     for (let m = 1; m <= 9; m++) {
@@ -439,13 +439,13 @@ function winterLab(host, SW, P, st, onPick, onChange) {
     const yb = top + rows * H;
     s += SW.seasons.map((yr, i) => (yr % 5 === 0 ? `<text x="${X(i)}" y="${yb + 16}" text-anchor="middle" class="tick">${yr}</text>` : "")).join("");
     s += `<g id="wl-hover" class="wl-hover" style="opacity:0"><rect x="${-span / n / 2}" y="2" width="${span / n}" height="${yb - 2}" fill="rgba(59,38,20,0.07)"/></g>`;
-    s += `<g class="wt-pointer" id="wl-ptr"><line x1="0" x2="0" y1="2" y2="${yb}" stroke="#a5462f" stroke-width="1.3"/><path d="M-5 -2 L5 -2 L0 6 Z" fill="#a5462f"/></g>`;
+    s += `<g class="wt-pointer" id="wl-ptr"><line x1="0" x2="0" y1="2" y2="${yb}" stroke="#8b3a2b" stroke-width="1.3"/><path d="M-5 -2 L5 -2 L0 6 Z" fill="#8b3a2b"/></g>`;
     time.innerHTML = s;
     time.setAttribute("aria-label", `One row per clue, winters ${SW.seasons[0]} to ${SW.seasons[n - 1]}: ${sigs.map(k => `${label(k)} read in ${MONTHS[monthOf(k) - 1]}`).join("; ")}.`);
     ptr = time.querySelector("#wl-ptr");
     tallyEl.innerHTML = "";
     keyEl.innerHTML = `<span><i class="wt-line dash"></i>simple guess</span><span><i class="wl-bar"></i>what happened (coloured = clue was closer)</span>` +
-      `<span><i class="wt-line" style="background:#a5462f"></i>clue's prediction</span><span class="wl-how">drag across · tap a month dot</span>`;
+      `<span><i class="wt-line" style="background:#8b3a2b"></i>clue's prediction</span><span class="wl-how">drag across · tap a month dot</span>`;
   }
 
   function render() {
@@ -829,8 +829,8 @@ export function renderWorld(G, css, layoutBase, opts = {}) {
   const picLayer = () => (state.src === "ssh" ? "ssh" : "sst");   // the picture follows the temperature / altimetry switch
   function showPic(pic) {
     state.pic = pic; state.layer = pic ? pic.layer : state.layer;
-    $("globe-pic").setAttribute("aria-pressed", String(!!pic));
-    $("globe-pic").textContent = pic ? "Hide the satellite picture" : "Show the NASA satellite picture";
+    const gp = $("globe-pic");   // the separate picture toggle is gone (Global · altimetry shows the picture); kept optional
+    if (gp) { gp.setAttribute("aria-pressed", String(!!pic)); gp.textContent = pic ? "Hide the satellite picture" : "Show the NASA satellite picture"; }
     $("pic-legend").hidden = !pic; $("legend-signal").hidden = !!pic;
     $("pic-moments").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(!!pic && !pic.auto && b.dataset.date === pic.date)));
     if (!pic) { state.token++; setTexture(null); $("nasa-status").textContent = ""; refresh(); return; }
@@ -847,7 +847,7 @@ export function renderWorld(G, css, layoutBase, opts = {}) {
     const b = e.target.closest("button[data-i]"), p = b && moments[b.dataset.i]; if (!p) return;
     stopPlay(); showPic({ layer: p.layer, date: p.date, auto: false }); fly(...p.pov);
   });
-  $("globe-pic").addEventListener("click", () => showPic(state.pic ? null : { layer: picLayer(), date: picDate(state.month, picLayer()), auto: true }));
+  if ($("globe-pic")) $("globe-pic").addEventListener("click", () => showPic(state.pic ? null : { layer: picLayer(), date: picDate(state.month, picLayer()), auto: true }));
   mSlider.addEventListener("input", () => setMonth(Number(mSlider.value)));
   $("globe-play").addEventListener("click", () => togglePlay("globe-play", () => setMonth(state.month % 12 + 1), 1400));
 
@@ -996,7 +996,7 @@ export function renderWorld(G, css, layoutBase, opts = {}) {
   function timeStrip(read, readWord, whole) {
     const cw = 23, x0 = 6, y = 34, M = "JFMAMJJASONDJFMA";
     let s = `<svg class="gk-time" viewBox="0 0 ${x0 * 2 + cw * 16} 62" role="img" aria-label="${readWord} ${read ? MONTHS[read - 1] : ""}; predicted: October to April">`;
-    s += `<rect x="${x0 + cw * 9}" y="${y - 13}" width="${cw * 7}" height="22" fill="rgba(165,70,47,0.13)" stroke="rgba(165,70,47,0.5)"/>`;
+    s += `<rect x="${x0 + cw * 9}" y="${y - 13}" width="${cw * 7}" height="22" fill="rgba(139,58,43,0.13)" stroke="rgba(139,58,43,0.5)"/>`;
     s += `<text x="${x0 + cw * 12.5}" y="${y - 17}" text-anchor="middle" class="gk-t-season">${whole ? "shown: Oct–Apr" : "predicted: Oct–Apr"}</text>`;
     for (let j = 0; j < 16; j++) {
       const on = read && j === read - 1;

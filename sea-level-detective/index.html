@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sea Level Detective · Poseidon SAR</title>
   <meta name="description" content="Is sea level really rising where you live, or is it El Niño? A trend detective built on NASA satellite altimetry.">
-  <link rel="stylesheet" href="style.css?v=20261115f">
-  <link rel="stylesheet" href="manuscript.css?v=20261115f">
+  <link rel="stylesheet" href="style.css?v=20261115g">
+  <link rel="stylesheet" href="manuscript.css?v=20261115g">
   <script src="vendor/plotly.min.js" defer></script>
   <script src="vendor/globe.gl.min.js" defer></script>
-  <script type="module" src="app.js?v=20261115f"></script>
-  <script type="module" src="manuscript.js?v=20261115f"></script>
+  <script type="module" src="app.js?v=20261115g"></script>
+  <script type="module" src="manuscript.js?v=20261115g"></script>
   <noscript><style>.landing, .landing-roller { display: none !important; }</style></noscript>
 </head>
 <body>
@@ -99,7 +99,6 @@
         </label>
         <strong id="globe-month-label"></strong>
         <div class="pic-row">
-          <button id="globe-pic" type="button" aria-pressed="false">Show the NASA satellite picture</button>
           <span class="presets" id="pic-moments"></span>
         </div>
         <div class="nasa-legend" id="pic-legend" hidden></div>
@@ -316,7 +315,7 @@
       <li><b>Other</b>: <a href="https://nsidc.org/data/g02135" target="_blank" rel="noopener">NSIDC Sea Ice Index</a> ·
         <a href="https://waterdata.usgs.gov/monitoring-location/USGS-01358000/" target="_blank" rel="noopener">USGS Hudson River</a></li>
     </ul>
-    <details class="table-view">
+    <details class="table-view" open>
       <summary>How we tested</summary>
       <div>
         <p class="note">Sea level in mm, 1993–2012 average = 0. Tide gauges measure against the land; satellites against the Earth's centre.</p>
