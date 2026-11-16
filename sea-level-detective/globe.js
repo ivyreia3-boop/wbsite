@@ -459,8 +459,11 @@ function winterLab(host, SW, P, st, onPick, onChange) {
   return { render, point, pred, label, best, passed, has, monthOf };
 }
 
-export function renderWorld(G, css, layoutBase) {
-  if (!G) { $("world").hidden = true; return; }
+export function renderWorld(G, css, layoutBase, opts = {}) {
+  // switching coast rebuilds all of this; once retired, this build's late timers and handlers touch nothing on the page
+  let retired = false; const SINK = document.createElement("div");
+  const $ = id => retired ? SINK : document.getElementById(id);
+  if (!G) { $("world").hidden = true; return { dispose() {} }; }
   const battery = { lat: G.battery[0], lng: G.battery[1] };
   const P = Object.fromEntries(G.predictors.map(p => [p.predictor, p]));
   const km = x => Math.round(x).toLocaleString("en-US");
@@ -479,7 +482,7 @@ export function renderWorld(G, css, layoutBase) {
     src: SSHM ? "ssh" : "sst",
     sigs: ["nino34_giss", "nao_power", "msl_portland", "seaice_arctic", "pdo_ncei"], readMonths: {} };   // Test a winter: chosen clues; a month picked for a clue (otherwise its best)
   const el = $("globe");
-  let world = null;
+  let world = null, stopGlobe = () => {};
   const baseImg = null, baseReady = Promise.resolve();   // imagery is composited onto the parchment (MS.paper)
 
   // arcs: colour runs from faint at the source to bright at New York; "glow" adds a wide faint twin underneath
@@ -745,11 +748,9 @@ export function renderWorld(G, css, layoutBase) {
       .pathColor(() => NEON.amber).pathStroke(1.4).pathDashLength(0.06).pathDashGap(0.02).pathDashAnimateTime(6000).pathTransitionDuration(0)
       .ringLat("lat").ringLng("lng").ringColor(d => t => fade(d.color || NEON.cyan, Math.max(0, 1 - t)))
       .ringMaxRadius(d => d.maxR || 4).ringPropagationSpeed(d => d.speed || 1.5).ringRepeatPeriod(d => d.period || 1400);
-    {   // start over this coast; arriving from the other coast, start over that one and swing across
-      const from = document.documentElement.dataset.coastFrom, other = from ? (from === "west" ? [14, -128, 2.2] : [18, -108, 2.2]) : null;
-      const [la0, lo0, al0] = other || COAST.pov.signal;
+    {   // start over this coast (or, after a coast switch, where the old globe stopped)
+      const [la0, lo0, al0] = opts.startPov || COAST.pov.signal;
       world.pointOfView({ lat: la0, lng: lo0, altitude: el.clientWidth < 520 ? al0 * 1.4 : al0 }, 0);
-      if (other) setTimeout(() => { const [la, lo, al] = COAST.pov.signal; world.pointOfView({ lat: la, lng: lo, altitude: el.clientWidth < 520 ? al * 1.4 : al }, 1600); }, 350);
     }
     // keep the page light: draw at most 1.25 device pixels per CSS pixel, and stop drawing the globe entirely while it
     // is scrolled out of view or the tab is in the background
@@ -758,6 +759,8 @@ export function renderWorld(G, css, layoutBase) {
     const wake = () => { if (onScreen && !document.hidden) world.resumeAnimation(); else world.pauseAnimation(); };
     new IntersectionObserver(es => { onScreen = es[0].isIntersecting; wake(); }, { threshold: 0.02 }).observe(el);
     document.addEventListener("visibilitychange", wake);
+    stopGlobe = () => { document.removeEventListener("visibilitychange", wake); clearTimeout(idleTimer);
+      try { world.pauseAnimation(); world.renderer().dispose(); if (world._destructor) world._destructor(); } catch (e) { /* already gone */ } };
     const ctl = world.controls();
     ctl.enableZoom = false;
     // slow idle spin; any touch stops it, it resumes after 10 s of quiet (never with reduced motion or in "Test a winter")
@@ -1211,4 +1214,14 @@ export function renderWorld(G, css, layoutBase) {
     `<td>${p.predictor === "nino34_giss" || p.predictor === "oni" ? "★" : ""}</td></tr>`).join("");
   $("world-table").innerHTML = `<div class="table-scroll"><table><thead><tr><th style="text-align:left">Clue</th><th>Distance (km)</th>` +
     `<th>Link this month (r)</th><th>Predicts next winter (skill)</th><th>Proven</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return {
+    pov: () => world && world.pointOfView(),
+    fly: (pov, ms) => world && world.pointOfView({ lat: pov[0], lng: pov[1], altitude: el.clientWidth < 520 ? pov[2] * 1.4 : pov[2] }, ms),
+    mode: () => state.mode, src: () => state.src, setMode, setSrc,
+    // retire: stop everything this build runs and let go of the page (its last frame stays drawn); dispose: free the GPU
+    retire() { stopPlay(); if (state.spin) state.spin(false);
+      for (const id of ["lead-curve", "ntrchart"]) { const g = document.getElementById(id); if (g && g.removeAllListeners) g.removeAllListeners("plotly_click"); }
+      retired = true; try { world.pauseAnimation(); } catch (e) { /* no globe */ } },
+    dispose() { stopGlobe(); },
+  };
 }

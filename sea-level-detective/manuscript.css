@@ -461,7 +461,18 @@ main a[href^="http"]:hover { text-decoration-color: currentColor; }
 .coast-switch button:hover { background: rgba(139,58,43,.08); }
 .coast-switch button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #f8f5ee; }
 html { overflow-x: clip; }
-#world, .board { transition: transform .45s cubic-bezier(.45,.05,.25,1), opacity .45s ease; }
-#world.cs-leave, .board.cs-leave { transform: translateX(calc(var(--cs-dir) * 9vw)); opacity: 0; }
-html.cs-arriving #world, html.cs-arriving .board { transform: translateX(calc(var(--cs-from) * 9vw)); opacity: 0; transition: none; }
-@media (prefers-reduced-motion: reduce) { #world, .board { transition: none; } }
+/* switching coast on the same page: the words around the globe fade while it turns, the panels slide a little and fade */
+#world > h2, #world .stage-head > b, #world #hud-mode, #world .drawer, #world .nota-wrap, #world .globe-key, #world .rail,
+#world .winter-sheet, #world > .caption, #world > details, #world .globe-status, .board > .panel {
+  transition: opacity .45s ease, transform .45s cubic-bezier(.45,.05,.25,1); }
+#world.cs-out > h2, #world.cs-out .stage-head > b, #world.cs-out #hud-mode, #world.cs-out .drawer, #world.cs-out .nota-wrap,
+#world.cs-out .globe-key, #world.cs-out .rail, #world.cs-out .winter-sheet, #world.cs-out > .caption, #world.cs-out > details,
+#world.cs-out .globe-status { opacity: 0; }
+#world.cs-in > h2, #world.cs-in .stage-head > b, #world.cs-in #hud-mode, #world.cs-in .drawer, #world.cs-in .nota-wrap,
+#world.cs-in .globe-key, #world.cs-in .rail, #world.cs-in .winter-sheet, #world.cs-in > .caption, #world.cs-in > details,
+#world.cs-in .globe-status { opacity: 0; transition: none; }
+.board > .panel.cs-out { opacity: 0; transform: translateX(calc(var(--cs-dir, 1) * 28px)); }
+.board > .panel.cs-in { opacity: 0; transform: translateX(calc(var(--cs-dir, 1) * 28px)); transition: none; }
+.globe-ghost { position: fixed; z-index: 3; pointer-events: none; opacity: 1; transition: opacity .7s ease; }
+.globe-ghost.gone { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { #world *, .board > .panel, .globe-ghost { transition: none !important; } }

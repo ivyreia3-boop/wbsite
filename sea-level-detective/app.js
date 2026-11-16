@@ -1,7 +1,7 @@
 // Sea Level Detective: page logic. Statistics live in stats.js (tested against the Python pipeline).
 import { fitWindow, yearsToDetect } from "./stats.js";
 import { renderWorld } from "./globe.js";
-import { COAST, speakCoast, coastSwitch } from "./coast.js";
+import { COAST, coastConfig, setCoast, speakCoast, coastSwitch } from "./coast.js";
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -238,7 +238,7 @@ function renderNTR() {
   });
   const layout = layoutBase();
   layout.yaxis.ticksuffix = ""; layout.yaxis.title = { text: "storm-surge days", font: { size: 12 } };
-  layout.hovermode = "closest"; layout.barmode = "overlay"; layout.bargap = 0.25; layout.transition = { duration: 260, easing: "linear" };
+  layout.hovermode = "closest"; layout.barmode = "overlay"; layout.bargap = 0.25;   // no Plotly transition here: with pattern-filled bars it throws on every redraw
   layout.xaxis.type = "category"; layout.xaxis.categoryorder = "array"; layout.xaxis.categoryarray = valid.map(label);
   layout.xaxis.tickangle = -60; layout.margin.b = 64;
   layout.shapes = [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: avg, y1: avg, line: { color: css("--text-secondary"), dash: "dot", width: 1.5 } }];
@@ -263,17 +263,85 @@ function renderNTR() {
       : `El Niño's mark on New York is how often storms push water in, and it shows up months before winter.`);
 }
 
+// ---------------------------------------------------------------- East / West
+// Each coast has its own data (data/*.json for New York, data/*_west.json for Los Angeles). Switching stays on this page:
+// the globe turns across to the other coast while its panels fade, then the globe section and the coast's panels are
+// rebuilt from pristine copies with the other coast's data, the old globe's last frame cross-fades into the new one, and
+// everything fades back in.
+const coastCache = {};
+function loadCoast(c) {
+  if (!coastCache[c.id]) coastCache[c.id] = (async () => {
+    const get = async f => { try { const r = await fetch(`data/${f}${c.suffix}.json`); return r.ok ? await r.json() : null; } catch { return null; } };
+    const [ntr, globe, sw, ssh, local] = await Promise.all(["ntr", "globe", "signal_winters", "clue_map_ssh", "local_gauges"].map(get));
+    if (globe) Object.assign(globe, { sw, ssh, local });
+    return { ntr, globe };
+  })();
+  return coastCache[c.id];
+}
+let TPL = null, GW = null, switching = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function switchCoast(to) {
+  if (switching || to === COAST.id || !TPL) return;
+  switching = true;
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches, cfg = coastConfig(to);
+  const mode = GW.mode ? GW.mode() : "signal", src = GW.src ? GW.src() : "ssh";
+  const target = src === "local" ? cfg.pov.local : mode === "winter" ? cfg.pov.winter : cfg.pov.signal;
+  const dir = to === "west" ? 1 : -1;   // going west the view pans left, so the old content leaves to the right
+  const panels = [$("lead-panel"), $("harbor"), $("explorer"), $("pacific-panel")];
+  // 1. turn the old globe across to the other coast while the words around it fade away
+  $("world").classList.add("cs-out");
+  for (const p of panels) { p.style.setProperty("--cs-dir", dir); p.classList.add("cs-out"); }
+  GW.fly(target, calm ? 0 : 1400);
+  const [data] = await Promise.all([loadCoast(cfg), sleep(calm ? 0 : 1450)]);
+  // 2. keep the old globe's last frame as a ghost over the stage, retire that build, rebuild for the new coast
+  const oldGlobe = $("globe"), box = oldGlobe.getBoundingClientRect();
+  GW.retire();
+  for (const it of [...Anim.items]) if (it.el.closest("#world, #lead-panel")) { clearInterval(it.timer); Anim.io.unobserve(it.el); Anim.items.splice(Anim.items.indexOf(it), 1); }
+  const old = GW;
+  setCoast(to);
+  const url = new URL(location.href);
+  if (to === "west") url.searchParams.set("coast", "west"); else url.searchParams.delete("coast");
+  history.replaceState(null, "", url);
+  const w = TPL.world.cloneNode(true), lead = TPL.lead.cloneNode(true);
+  w.classList.add("cs-in"); lead.classList.add("cs-in"); lead.style.setProperty("--cs-dir", -dir);
+  oldGlobe.id = "globe-ghost"; oldGlobe.classList.add("globe-ghost");
+  Object.assign(oldGlobe.style, { left: box.left + "px", top: box.top + "px", width: box.width + "px", height: box.height + "px" });
+  document.body.appendChild(oldGlobe);
+  $("world").replaceWith(w); $("lead-panel").replaceWith(lead);
+  for (const [k, html] of TPL.text) { const e = k.startsWith("#") ? document.querySelector(k) : $(k); if (e) e.innerHTML = html; }
+  $("ntrchart").setAttribute("aria-label", TPL.ntrLabel);
+  NTR = data.ntr;
+  Plotly.purge("ntrchart");   // a fresh chart: redrawing patterned bars in place trips Plotly
+  renderNTR();
+  GW = renderWorld(data.globe, css, layoutBase, { startPov: target });
+  if (src !== "ssh" && GW.setSrc) GW.setSrc(src);
+  if (mode === "winter" && GW.setMode) GW.setMode("winter");
+  speakCoast([$("world"), $("lead-panel"), $("harbor"), $("pacific-lede")]);
+  coastSwitch($("coast-switch"), switchCoast);
+  if (COAST.explorerRegion && [...$("region").options].some(o => o.value === COAST.explorerRegion)) {
+    $("region").value = COAST.explorerRegion; $("region").dispatchEvent(new Event("change"));
+  }
+  Anim.sync();
+  // 3. fade everything back in; the ghost of the old globe fades out over the new one, then is freed
+  void document.body.offsetWidth;
+  await sleep(40);
+  w.classList.remove("cs-in"); lead.classList.remove("cs-in");
+  for (const p of panels) if (p.isConnected) p.classList.remove("cs-out");
+  oldGlobe.classList.add("gone");
+  await sleep(calm ? 0 : 700);
+  oldGlobe.remove(); old.dispose();
+  switching = false;
+}
+
 async function main() {
   DATA = await (await fetch("data/series.json")).json();
-  try { NTR = await (await fetch(`data/ntr${COAST.suffix}.json`)).json(); } catch { NTR = null; }
-  let GLOBE = null;
-  try { GLOBE = await (await fetch(`data/globe${COAST.suffix}.json`)).json(); } catch { GLOBE = null; }
-  // every signal x read-month x winter, leave-one-winter-out (ntr/explore_signal_winters.py), for "Test a winter"
-  if (GLOBE) try { GLOBE.sw = await (await fetch(`data/signal_winters${COAST.suffix}.json`)).json(); } catch { GLOBE.sw = null; }
-  // the altimetry clue map (ntr/explore_ssh_gibs.py): sea-surface height instead of temperature, switchable on the globe
-  if (GLOBE) try { GLOBE.ssh = await (await fetch(`data/clue_map_ssh${COAST.suffix}.json`)).json(); } catch { GLOBE.ssh = null; }
-  // East Coast tide gauges for the globe's local view: monthly sea level against normal (handoff/csv, NOAA CO-OPS)
-  if (GLOBE) try { GLOBE.local = await (await fetch(`data/local_gauges${COAST.suffix}.json`)).json(); } catch { GLOBE.local = null; }
+  const first = await loadCoast(COAST);
+  NTR = first.ntr;
+  const GLOBE = first.globe;
+  // pristine copies of everything a coast switch rebuilds, taken before anything is drawn into them
+  TPL = { world: $("world").cloneNode(true), lead: $("lead-panel").cloneNode(true),
+    text: ["harbor-title", "pacific-lede"].map(id => [id, $(id).innerHTML]).concat([["#harbor .panel-lede", document.querySelector("#harbor .panel-lede").innerHTML]]),
+    ntrLabel: $("ntrchart").getAttribute("aria-label") };
   await waitForPlotly();
   const order = ["global", "west_pacific", "east_pacific", "california_shelf", "ny_bight", "global_nasa_gmsl_indicator",
                  "gauge_la_jolla", "gauge_san_francisco", "gauge_the_battery"];
@@ -315,10 +383,11 @@ async function main() {
     s.value = String(v); renderNTR(); }, 320);
   $("anim-master").addEventListener("click", () => Anim.toggle());
   Anim.sync();
-  renderWorld(GLOBE, css, layoutBase);
+  GW = renderWorld(GLOBE, css, layoutBase);
   // East / West: the globe and every panel after it follow the chosen coast
-  speakCoast([$("world"), document.querySelector(".board > .panel"), $("harbor"), $("pacific-lede")]);
-  coastSwitch($("coast-switch"), [$("world"), document.querySelector(".board")]);
+  speakCoast([$("world"), $("lead-panel"), $("harbor"), $("pacific-lede")]);
+  coastSwitch($("coast-switch"), switchCoast);
+  loadCoast(coastConfig(COAST.id === "east" ? "west" : "east"));   // fetch the other coast quietly, so a switch is instant
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { update(); renderE1(); renderNTR(); });
 }
 main().catch(err => { console.error(err); $("chart").textContent = "Could not load data: " + err.message; });
