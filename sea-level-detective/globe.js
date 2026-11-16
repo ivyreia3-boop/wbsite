@@ -19,7 +19,7 @@ const LAYERS = {
 };
 // NASA's own colour scales for the two anomaly layers (from gibs.earthdata.nasa.gov/colormaps/v1.3/*.xml): [r, g, b, value].
 // Used to turn each imagery pixel back into its value, which is then redrawn in the manuscript palette.
-import { COAST } from "./coast.js";
+import { COAST } from "./coast.js?v=20261115c";
 const CMAPS = fetch("data/gibs_colormaps.json").then(r => r.json()).catch(() => null);
 const LUTS = {};
 function valueLut(rows, vmax) {   // 32x32x32 colour cube -> value / vmax (NaN if no colour on NASA's scale is close)
@@ -54,7 +54,8 @@ function lerpColor(a, b, t) {
 }
 // Manuscript palette (Leonardo's notebooks): parchment, iron-gall ink, red chalk (sanguine).
 // Keys keep their old names: cyan = main ink, amber = sanguine (the confirmed link), warm/cool = data strokes.
-const NEON = { warm0: "#c48a72", warm1: "#8a3a26", cool0: "#7f97a8", cool1: "#2f5878", cyan: "#3b2614", amber: "#a5462f",
+const NEON = { warm0: "#c09584", warm1: "#8b3a2b", cool0: "#8c98a6", cool1: "#3a4e68",   // data inks = the picture's (SANG, INKB)
+  cyan: "#3b2614", amber: "#a5462f",
   ok: "#2f5a2a", grid: "rgba(70,45,20,0.16)", land: "rgba(70,45,20,0.85)", dim: "#8a7a63", paper: "#ede6d6" };
 function colorFor(r, r0) {   // diverging: warm arm = positive, cool arm = negative; brighter/hotter with strength
   const t = Math.max(0, Math.min(1, (Math.abs(r) - r0) / (0.6 - r0)));
@@ -273,7 +274,7 @@ function drawContours(c, vals, W, H, levels) {
 // Data: data/signal_winters.json (ntr/explore_signal_winters.py on the DGX).
 const INKS = ["#8b3a2b", "#33404f", "#6b5238", "#6e7378", "#55603f"];   // antique inks: red chalk (El Niño), iron-gall blue-black, sepia, graphite, verdigris
 const MON3 = MONTHS.map(m => m.slice(0, 3));
-const BLUE = "#2f5878", FAINT = "rgba(70,45,20,0.18)";
+const BLUE = "#3a4e68", FAINT = "rgba(70,45,20,0.18)";
 function winterLab(host, SW, P, st, onPick, onChange) {
   if (!host || !SW) return { render() {}, point() {} };
   const n = SW.seasons.length, VW = 1000, L0 = 190, R0 = 130, span = VW - L0 - R0;
