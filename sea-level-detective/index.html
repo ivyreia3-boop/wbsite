@@ -5,14 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sea Level Detective · Poseidon SAR</title>
   <meta name="description" content="Is sea level really rising where you live, or is it El Niño? A trend detective built on NASA satellite altimetry.">
-  <link rel="stylesheet" href="style.css?v=20261115e">
-  <link rel="stylesheet" href="manuscript.css?v=20261115e">
+  <link rel="stylesheet" href="style.css?v=20261115f">
+  <link rel="stylesheet" href="manuscript.css?v=20261115f">
   <script src="vendor/plotly.min.js" defer></script>
   <script src="vendor/globe.gl.min.js" defer></script>
-  <script type="module" src="app.js?v=20261115e"></script>
-  <script type="module" src="manuscript.js?v=20261115e"></script>
+  <script type="module" src="app.js?v=20261115f"></script>
+  <script type="module" src="manuscript.js?v=20261115f"></script>
+  <noscript><style>.landing, .landing-roller { display: none !important; }</style></noscript>
 </head>
 <body>
+<!-- Landing: a closed scroll with the question; "Find out" unrolls the page. Its own tiny script (not the app modules),
+     so it can always open; without JavaScript it is never shown (noscript style in the head). -->
+<div class="landing" id="landing" role="dialog" aria-modal="true" aria-labelledby="landing-title">
+  <div class="landing-in">
+    <svg class="l-sketch" viewBox="0 0 260 170" aria-hidden="true">
+      <path pathLength="1" style="--d:.1s" d="M60 85a70 70 0 1 0 140 0a70 70 0 1 0-140 0"/>
+      <path pathLength="1" style="--d:.5s" class="faint" d="M130 15c-34 22-34 118 0 140M130 15c34 22 34 118 0 140M62 72c40 10 96 10 136 0M62 100c40-10 96-10 136 0"/>
+      <path pathLength="1" style="--d:.9s" class="faint" d="M74 113q12-10 26-2t26-3"/>
+      <path pathLength="1" style="--d:1.2s" class="red" d="M92 112C104 70 140 52 166 58"/>
+      <circle cx="92" cy="112" r="3.2" class="dot red"/><circle cx="166" cy="58" r="3.2" class="dot"/>
+      <path pathLength="1" style="--d:1.6s" class="faint" d="M8 150q14-8 28 0t28 0t28 0M196 150q14-8 28 0t28 0"/>
+    </svg>
+    <p class="l-eyebrow">NASA Space Apps 2026 · Team Poseidon SAR</p>
+    <h1 id="landing-title">Does the ocean know<br>before the sea rises in New York Harbor?</h1>
+    <p class="l-sub">29 NASA and NOAA clues, 45 winters, two coasts.</p>
+    <button type="button" id="landing-go">Find out</button>
+  </div>
+</div>
+<div class="landing-roller" id="landing-roller" aria-hidden="true"></div>
+<script>
+(function () {
+  var root = document.documentElement, L = document.getElementById("landing"), R = document.getElementById("landing-roller"),
+      b = document.getElementById("landing-go"), calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  root.classList.add("landing-on");
+  function go() {
+    if (L.classList.contains("rolling")) return;
+    window.scrollTo(0, 0);
+    L.classList.add("rolling"); R.classList.add("rolling");
+    setTimeout(function () { L.remove(); R.remove(); root.classList.remove("landing-on"); }, calm ? 250 : 1500);
+  }
+  b.addEventListener("click", go);
+  setTimeout(function () { try { b.focus({ preventScroll: true }); } catch (e) {} }, 400);
+})();
+</script>
 <header class="hero">
   <div class="wrap">
     <p class="eyebrow">NASA Space Apps 2026 · Be An Earth System Trend Detective!</p>
