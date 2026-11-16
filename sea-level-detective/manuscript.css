@@ -476,3 +476,4 @@ html { overflow-x: clip; }
 .globe-ghost { position: fixed; z-index: 3; pointer-events: none; opacity: 1; transition: opacity .7s ease; }
 .globe-ghost.gone { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { #world *, .board > .panel, .globe-ghost { transition: none !important; } }
+.img-card img.plain { mix-blend-mode: normal; filter: none; }   /* our own figures are drawn in the site inks already */
